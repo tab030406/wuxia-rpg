@@ -4,178 +4,163 @@
 <meta charset="UTF-8">
 <title>俠客行 · 江湖路</title>
 <style>
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&family=Noto+Serif+TC:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Ma+Shan+Zheng&family=Noto+Serif+TC:wght@400;600;700&display=swap');
 
 :root{
-  --bg-dark:#181210;
-  --bg-panel:#241a15;
-  --bg-panel2:#2c2119;
-  --parchment:#e9dcbd;
-  --parchment-dim:#c9b98f;
-  --gold:#c9a24b;
-  --gold-dim:#8a713a;
-  --red:#b03a30;
-  --red-dim:#6e2620;
-  --jade:#4f8d75;
-  --jade-dim:#345c4d;
-  --text:#ece0c4;
-  --text-muted:#a3937a;
-  --danger:#e2564a;
+  --paper:#e8dfc7;
+  --paper-dark:#d9cea9;
+  --ink:#2b2621;
+  --ink-soft:#4a4038;
+  --ink-faint:#8a7d68;
+  --seal:#a3352c;
+  --seal-dark:#7c2620;
+  --jade:#4f7d6c;
+  --jade-dark:#345c4d;
+  --gold:#b08d43;
+  --panel:#efe6cc;
+  --panel-line:#c8b98e;
 }
 *{box-sizing:border-box;}
 body{
   margin:0;
-  background:radial-gradient(ellipse at 50% 0%, #2a1e17 0%, var(--bg-dark) 70%);
-  color:var(--text);
+  background:
+    radial-gradient(ellipse at 50% -10%, #cfc4a0 0%, #b8ad8a 40%, #9c9074 100%);
+  color:var(--ink);
   font-family:'Noto Serif TC', serif;
   display:flex;
   flex-direction:column;
   align-items:center;
-  padding:14px 10px 30px;
+  padding:16px 10px 30px;
   min-height:100vh;
 }
 h1.title{
-  font-family:'Press Start 2P', monospace;
-  font-size:15px;
-  color:var(--gold);
-  letter-spacing:2px;
-  text-shadow:2px 2px 0 #000, 0 0 14px rgba(201,162,75,.4);
-  margin:4px 0 12px;
+  font-family:'Ma Shan Zheng', cursive;
+  font-size:36px;
+  color:var(--ink);
+  letter-spacing:6px;
+  margin:2px 0 12px;
   text-align:center;
+  text-shadow:1px 1px 0 rgba(255,255,255,.25);
 }
 .topbar{
   width:100%;
-  max-width:980px;
+  max-width:1000px;
   display:flex;
   justify-content:space-between;
   align-items:center;
   flex-wrap:wrap;
   gap:8px;
   margin-bottom:10px;
-  background:var(--bg-panel);
-  border:2px solid var(--gold-dim);
+  background:var(--panel);
+  border:1px solid var(--panel-line);
+  box-shadow:0 2px 6px rgba(0,0,0,.18), inset 0 0 0 1px rgba(255,255,255,.15);
   padding:8px 14px;
-  border-radius:2px;
+  border-radius:3px;
 }
-.stat-mini{display:flex;align-items:center;gap:6px;font-size:13px;}
-.bar-outer{width:90px;height:10px;background:#000;border:1px solid #000;position:relative;box-shadow:inset 0 0 0 1px #4a3a28;}
+.stat-mini{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--ink-soft);}
+.bar-outer{width:90px;height:9px;background:#00000022;border:1px solid var(--ink-faint);position:relative;border-radius:2px;overflow:hidden;}
 .bar-inner{height:100%;}
-.bar-hp{background:linear-gradient(#e2564a,#8b2e2e);}
-.bar-qi{background:linear-gradient(#6fb8d6,#2e6e8b);}
-.topbtns button{margin-left:6px;}
+.bar-hp{background:linear-gradient(#c14a3e,#7c2620);}
+.bar-qi{background:linear-gradient(#5fa08a,#345c4d);}
 button{
   font-family:'Noto Serif TC', serif;
-  background:var(--bg-panel2);
-  color:var(--parchment);
-  border:1px solid var(--gold-dim);
-  padding:6px 10px;
+  background:var(--panel);
+  color:var(--ink);
+  border:1px solid var(--gold);
+  padding:6px 11px;
   cursor:pointer;
   font-size:13px;
   border-radius:2px;
   transition:background .15s, transform .05s;
 }
-button:hover:not(:disabled){background:var(--gold-dim);color:#1a1410;}
+button:hover:not(:disabled){background:var(--gold);color:var(--panel);}
 button:active:not(:disabled){transform:translateY(1px);}
 button:disabled{opacity:.4;cursor:not-allowed;}
 .gamewrap{
   display:flex;
   gap:12px;
   width:100%;
-  max-width:980px;
+  max-width:1000px;
   flex-wrap:wrap;
   justify-content:center;
 }
-#gameCanvas{
-  background:#000;
-  border:3px solid var(--gold-dim);
-  image-rendering:pixelated;
-  image-rendering:crisp-edges;
-  box-shadow:0 0 24px rgba(0,0,0,.6), 0 0 40px rgba(201,162,75,.08);
-}
 .canvasCol{display:flex;flex-direction:column;gap:8px;}
-.hint{font-size:12px;color:var(--text-muted);text-align:center;}
-.log{
-  width:672px;
-  max-width:100%;
-  height:70px;
-  background:var(--bg-panel);
-  border:2px solid var(--gold-dim);
-  padding:6px 10px;
-  font-size:12.5px;
-  overflow-y:auto;
-  line-height:1.6;
-  color:var(--parchment-dim);
+#gameCanvas{
+  background:#c9bd97;
+  border:1px solid var(--ink-faint);
+  box-shadow:0 4px 18px rgba(0,0,0,.35), inset 0 0 40px rgba(0,0,0,.08);
+  cursor:crosshair;
 }
-.log div.newest{color:var(--gold);}
+.hint{font-size:12px;color:var(--ink-faint);text-align:center;}
+.hotbar{display:flex;gap:8px;justify-content:center;}
+.slot{
+  width:64px;height:64px;
+  background:var(--panel);
+  border:1px solid var(--gold);
+  border-radius:4px;
+  position:relative;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  font-size:11px;color:var(--ink-soft);text-align:center;overflow:hidden;
+}
+.slot .key{position:absolute;top:2px;left:4px;font-size:10px;color:var(--ink-faint);}
+.slot .qi{position:absolute;bottom:2px;right:4px;font-size:9px;color:var(--jade-dark);}
+.slot .cd{
+  position:absolute;left:0;right:0;bottom:0;background:rgba(20,15,10,.72);
+  transition:height .1s linear;color:#e8dfc7;font-size:14px;
+  display:flex;align-items:center;justify-content:center;
+}
+.slot.empty{color:var(--ink-faint);font-size:10px;}
+.slot.basic{border-color:var(--ink-faint);}
+.log{
+  width:672px;max-width:100%;height:64px;
+  background:var(--panel);border:1px solid var(--panel-line);
+  padding:6px 10px;font-size:12.5px;overflow-y:auto;line-height:1.6;color:var(--ink-soft);
+}
+.log div.newest{color:var(--seal-dark);font-weight:600;}
 .sidebar{
-  width:280px;
-  max-width:100%;
-  background:var(--bg-panel);
-  border:2px solid var(--gold-dim);
-  padding:10px 12px;
-  font-size:13px;
-  height:fit-content;
+  width:280px;max-width:100%;
+  background:var(--panel);border:1px solid var(--panel-line);
+  padding:10px 12px;font-size:13px;height:fit-content;
+  box-shadow:0 2px 6px rgba(0,0,0,.15);
 }
 .sidebar h3{
-  font-family:'Press Start 2P', monospace;
-  font-size:11px;
-  color:var(--gold);
-  margin:10px 0 8px;
-  border-bottom:1px dashed var(--gold-dim);
-  padding-bottom:6px;
+  font-family:'Ma Shan Zheng', cursive;
+  font-size:19px;color:var(--seal-dark);
+  margin:10px 0 8px;border-bottom:1px dashed var(--panel-line);padding-bottom:6px;
+  letter-spacing:1px;
 }
 .sidebar h3:first-child{margin-top:0;}
 .attr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
-.attr-row .name{width:56px;color:var(--text-muted);}
-.attr-row .val{width:26px;text-align:center;font-weight:bold;color:var(--parchment);}
+.attr-row .name{width:56px;color:var(--ink-faint);}
+.attr-row .val{width:26px;text-align:center;font-weight:bold;}
 .attr-row button{padding:1px 8px;font-size:12px;}
-.small-note{font-size:11px;color:var(--text-muted);margin:4px 0 8px;}
-.skill-item, .inv-item{
-  display:flex;justify-content:space-between;align-items:center;
-  padding:4px 0;border-bottom:1px solid #3a2c20;font-size:12.5px;
-}
-.skill-item:last-child, .inv-item:last-child{border-bottom:none;}
-.tag{font-size:10px;padding:1px 5px;border-radius:2px;background:var(--jade-dim);color:#cfe9dc;margin-left:4px;}
-.overlay{
-  position:fixed;inset:0;background:rgba(10,7,5,.82);
-  display:none;align-items:center;justify-content:center;z-index:50;
-  padding:16px;
-}
+.small-note{font-size:11px;color:var(--ink-faint);margin:4px 0 8px;line-height:1.5;}
+.skill-item{padding:6px 0;border-bottom:1px solid #c8b98e88;font-size:12.5px;}
+.skill-item .sname{font-weight:600;}
+.skill-slots{display:flex;gap:4px;margin-top:4px;}
+.skill-slots button{padding:2px 7px;font-size:11px;}
+.skill-slots button.active{background:var(--seal);color:#fff;border-color:var(--seal-dark);}
+.inv-item{display:flex;justify-content:space-between;align-items:center;padding:4px 0;border-bottom:1px solid #c8b98e88;font-size:12.5px;}
+.inv-item:last-child{border-bottom:none;}
+.overlay{position:fixed;inset:0;background:rgba(20,15,10,.72);display:none;align-items:center;justify-content:center;z-index:50;padding:16px;}
 .overlay.show{display:flex;}
 .modal{
-  background:var(--bg-panel);
-  border:3px solid var(--gold);
-  padding:20px 22px;
-  max-width:560px;
-  width:100%;
-  max-height:86vh;
-  overflow-y:auto;
+  background:var(--panel);border:1px solid var(--gold);
+  padding:22px 24px;max-width:560px;width:100%;max-height:86vh;overflow-y:auto;
+  box-shadow:0 8px 30px rgba(0,0,0,.5);
 }
-.modal h2{
-  font-family:'Press Start 2P', monospace;
-  font-size:14px;color:var(--gold);margin-top:0;
-}
-.npc-line{color:var(--parchment);font-size:14px;line-height:1.7;margin-bottom:12px;white-space:pre-wrap;}
+.modal h2{font-family:'Ma Shan Zheng', cursive;font-size:26px;color:var(--seal-dark);margin-top:0;}
+.npc-line{color:var(--ink-soft);font-size:14px;line-height:1.8;margin-bottom:12px;white-space:pre-wrap;}
 .choice-btn{display:block;width:100%;text-align:left;margin-bottom:6px;padding:8px 10px;}
-.choice-btn .desc{display:block;font-size:11px;color:var(--text-muted);margin-top:2px;}
-.battle-grid{display:flex;justify-content:space-between;gap:14px;margin-bottom:14px;}
-.combatant{flex:1;background:var(--bg-panel2);border:1px solid var(--gold-dim);padding:10px;text-align:center;}
-.combatant .cname{font-weight:bold;color:var(--gold);margin-bottom:6px;}
-.combatant .bar-outer{width:100%;height:12px;margin:4px 0;}
-.sprite-box{width:56px;height:56px;margin:0 auto 6px;}
-.actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:10px;}
-.actions button{width:100%;text-align:left;padding:8px;}
-.actions button .desc{display:block;font-size:10.5px;color:var(--text-muted);}
-.battlelog{
-  background:#000;border:1px solid var(--gold-dim);padding:6px 8px;height:70px;
-  overflow-y:auto;font-size:12px;margin-top:10px;color:var(--parchment-dim);
-}
+.choice-btn .desc{display:block;font-size:11px;color:var(--ink-faint);margin-top:2px;}
 #startOverlay .modal{text-align:center;}
-#startOverlay p{color:var(--parchment);line-height:1.8;font-size:13.5px;}
-.footer-credit{color:var(--text-muted);font-size:11px;margin-top:18px;}
+#startOverlay p{color:var(--ink-soft);line-height:1.9;font-size:14px;}
+.deathflash{position:fixed;inset:0;background:radial-gradient(ellipse at center, rgba(160,30,20,0) 40%, rgba(120,20,15,.55) 100%);pointer-events:none;opacity:0;transition:opacity .25s;z-index:40;}
+.deathflash.show{opacity:1;}
+.footer-credit{color:var(--ink-faint);font-size:11px;margin-top:18px;}
 ::-webkit-scrollbar{width:8px;}
-::-webkit-scrollbar-thumb{background:var(--gold-dim);}
-::-webkit-scrollbar-track{background:#000;}
+::-webkit-scrollbar-thumb{background:var(--gold);}
+::-webkit-scrollbar-track{background:#00000015;}
 </style>
 </head>
 <body>
@@ -184,7 +169,7 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 
 <div class="topbar">
   <div style="display:flex;gap:14px;flex-wrap:wrap;">
-    <div class="stat-mini">Lv.<span id="hudLevel">1</span></div>
+    <div class="stat-mini">境界 Lv.<span id="hudLevel">1</span></div>
     <div class="stat-mini">氣血 <div class="bar-outer"><div class="bar-inner bar-hp" id="hudHpBar" style="width:100%"></div></div> <span id="hudHpText">50/50</span></div>
     <div class="stat-mini">內力 <div class="bar-outer"><div class="bar-inner bar-qi" id="hudQiBar" style="width:100%"></div></div> <span id="hudQiText">20/20</span></div>
     <div class="stat-mini">銀兩 <span id="hudSilver">50</span></div>
@@ -199,24 +184,26 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 <div class="gamewrap">
   <div class="canvasCol">
     <canvas id="gameCanvas" width="672" height="448"></canvas>
-    <div class="hint">方向鍵 / WASD 移動　　E 與人互動　　荒野草地行走有機率遭遇江湖人物</div>
+    <div class="hotbar" id="hotbar"></div>
+    <div class="hint">WASD / 方向鍵 移動　　1 2 3 4 施展武功　　空白鍵 基本攻擊　　滑鼠點擊敵人鎖定目標　　E 與人互動</div>
     <div class="log" id="logBox"></div>
   </div>
 
   <div class="sidebar">
-    <h3>根基屬性　可分配點數：<span id="freePts">3</span></h3>
+    <h3>根基屬性　可分配 <span id="freePts">3</span> 點</h3>
     <div id="attrList"></div>
-    <div class="small-note">力量→拳腳外功傷害與氣血　身法→輕功內功傷害與閃避　內力→真氣上限與內功傷害　根骨→氣血上限與防禦</div>
+    <div class="small-note">力量→外功傷害與氣血　身法→身法傷害與敏捷　內力→真氣上限與內功傷害　根骨→氣血上限與防禦</div>
 
-    <h3>已學武功　武學點：<span id="skillPts">1</span></h3>
-    <div id="skillList" style="max-height:130px;overflow-y:auto;"></div>
+    <h3>武學　武學點 <span id="skillPts">1</span></h3>
+    <div id="skillList" style="max-height:170px;overflow-y:auto;"></div>
 
     <h3>行囊 / 裝備</h3>
-    <div id="invList" style="max-height:130px;overflow-y:auto;"></div>
+    <div id="invList" style="max-height:120px;overflow-y:auto;"></div>
   </div>
 </div>
 
-<div class="footer-credit">最小可玩雛形 · 像素復古風 · 自由學派、自由屬性，無職業限制</div>
+<div class="footer-credit">最小可玩雛形 · 水墨古風 · 即時戰鬥 · 自由學派、自由屬性，無職業限制</div>
+<div class="deathflash" id="deathFlash"></div>
 
 <!-- START OVERLAY -->
 <div class="overlay show" id="startOverlay">
@@ -226,8 +213,9 @@ button:disabled{opacity:.4;cursor:not-allowed;}
       這是一片自由的武林。你不受任何門派或職業束縛——<br>
       少林拳腳、武當劍法、丐幫棒法，皆可兼修並蓄；<br>
       力量、身法、內力、根骨，全憑己意分配。<br><br>
-      村中尋訪各派高人習武，荒野草地間會偶遇江湖人物。<br>
-      方向鍵移動，E 鍵互動。祝少俠闖出一番名號。
+      村中尋訪各派高人習武，荒野之中江湖人物往來不定，<br>
+      靠近即會纏鬥——以身法周旋、以武功克敵，皆在瞬息之間。<br>
+      移動躲避，1234 施展武功，祝少俠闖出一番名號。
     </p>
     <button id="btnStartNew" style="margin:6px 6px 0;padding:10px 22px;">新的開始</button>
     <button id="btnStartLoad" style="margin:6px 6px 0;padding:10px 22px;">讀取存檔</button>
@@ -244,47 +232,16 @@ button:disabled{opacity:.4;cursor:not-allowed;}
   </div>
 </div>
 
-<!-- BATTLE OVERLAY -->
-<div class="overlay" id="battleOverlay">
-  <div class="modal">
-    <h2 id="battleTitle">遭遇戰</h2>
-    <div class="battle-grid">
-      <div class="combatant">
-        <div class="sprite-box"><svg viewBox="0 0 20 20" width="56" height="56" id="battlePlayerSprite"></svg></div>
-        <div class="cname">你</div>
-        <div>氣血</div><div class="bar-outer"><div class="bar-inner bar-hp" id="bpHpBar"></div></div><div id="bpHpText"></div>
-        <div>內力</div><div class="bar-outer"><div class="bar-inner bar-qi" id="bpQiBar"></div></div><div id="bpQiText"></div>
-      </div>
-      <div class="combatant">
-        <div class="sprite-box"><svg viewBox="0 0 20 20" width="56" height="56" id="battleEnemySprite"></svg></div>
-        <div class="cname" id="beName">敵人</div>
-        <div>氣血</div><div class="bar-outer"><div class="bar-inner bar-hp" id="beHpBar"></div></div><div id="beHpText"></div>
-      </div>
-    </div>
-    <div class="battlelog" id="battleLog"></div>
-    <div class="actions" id="battleActions"></div>
-  </div>
-</div>
-
 <script>
 (function(){
 
 // ---------- Constants ----------
 const COLS=24, ROWS=16, TILE=28;
 const CANVAS_W=COLS*TILE, CANVAS_H=ROWS*TILE;
-const COLORS = {
-  grass:'#33512f', grass2:'#3c5c36', path:'#6b5636', pathEdge:'#5a4529',
-  tree:'#1f3a22', treeTrunk:'#4a3220', water:'#2a5470', water2:'#33648a',
-  wall:'#5a3a2c', wallRoof:'#7a2f28', border:'#111'
-};
 
-// ---------- Canvas ----------
-const canvas = document.getElementById('gameCanvas');
-const ctx = canvas.getContext('2d');
-ctx.imageSmoothingEnabled = false;
-
-// ---------- Map generation ----------
+// ---------- Map generation (unchanged layout) ----------
 let grid = [];
+let spawnTiles = [];
 function buildMap(){
   grid = [];
   for(let r=0;r<ROWS;r++){
@@ -310,6 +267,10 @@ function buildMap(){
   [[12,3],[16,4],[19,7],[14,10],[18,12],[11,9],[20,3],[21,10],[12,13]].forEach(([x,y])=>{
     if(grid[y] && grid[y][x]===',') grid[y][x]='T';
   });
+  spawnTiles = [];
+  for(let r=1;r<ROWS-1;r++) for(let c=10;c<COLS-1;c++){
+    if(grid[r][c]===',') spawnTiles.push({x:c*TILE+TILE/2, y:r*TILE+TILE/2});
+  }
 }
 buildMap();
 
@@ -319,6 +280,85 @@ function tileBlocked(px,py){
   const t = grid[r][c];
   return t==='T' || t==='~' || t==='#';
 }
+
+// ---------- Ink-wash background (baked once) ----------
+const bgCanvas = document.createElement('canvas');
+bgCanvas.width = CANVAS_W; bgCanvas.height = CANVAS_H;
+const bctx = bgCanvas.getContext('2d');
+function seededRand(seed){ let x = Math.sin(seed)*10000; return x-Math.floor(x); }
+
+function paintInkTile(c,r){
+  const x=c*TILE, y=r*TILE, cx=x+TILE/2, cy=y+TILE/2;
+  const t = grid[r][c];
+  const seed = c*137.3 + r*911.7;
+  if(t==='.'){
+    bctx.fillStyle = '#cdbd90';
+    bctx.fillRect(x,y,TILE,TILE);
+    bctx.fillStyle = 'rgba(120,100,60,0.10)';
+    bctx.beginPath();
+    bctx.ellipse(cx + (seededRand(seed)-0.5)*8, cy+(seededRand(seed+1)-0.5)*8, TILE*0.5, TILE*0.28, seededRand(seed+2)*3, 0, Math.PI*2);
+    bctx.fill();
+  } else if(t===','){
+    bctx.fillStyle = (c+r)%2===0 ? '#9fae82' : '#96a578';
+    bctx.fillRect(x,y,TILE,TILE);
+    bctx.strokeStyle='rgba(70,80,45,0.18)';
+    bctx.lineWidth=1.3;
+    for(let i=0;i<2;i++){
+      const bx = x+4+seededRand(seed+i)*TILE*0.7;
+      const by = y+TILE-4-seededRand(seed+i+3)*6;
+      bctx.beginPath();
+      bctx.moveTo(bx,by);
+      bctx.quadraticCurveTo(bx+2, by-8, bx+ (seededRand(seed+i+5)-0.5)*6, by-14);
+      bctx.stroke();
+    }
+  } else if(t==='T'){
+    bctx.fillStyle = (c+r)%2===0 ? '#9fae82' : '#96a578';
+    bctx.fillRect(x,y,TILE,TILE);
+    bctx.fillStyle = '#5a4630';
+    bctx.fillRect(cx-2, cy+2, 4, 10);
+    bctx.save();
+    bctx.shadowColor='rgba(40,55,35,0.5)';
+    bctx.shadowBlur=6;
+    bctx.fillStyle='rgba(60,80,55,0.85)';
+    bctx.beginPath();
+    bctx.arc(cx, cy-4, TILE*0.46, 0, Math.PI*2);
+    bctx.fill();
+    bctx.fillStyle='rgba(90,110,75,0.55)';
+    bctx.beginPath();
+    bctx.arc(cx-5, cy-9, TILE*0.28, 0, Math.PI*2);
+    bctx.fill();
+    bctx.restore();
+  } else if(t==='~'){
+    bctx.fillStyle = '#7f9aa3';
+    bctx.fillRect(x,y,TILE,TILE);
+    bctx.strokeStyle='rgba(255,255,255,0.25)';
+    bctx.lineWidth=1;
+    bctx.beginPath();
+    bctx.moveTo(x+2, cy+ (seededRand(seed)-0.5)*6);
+    bctx.quadraticCurveTo(cx, cy-4, x+TILE-2, cy+(seededRand(seed+1)-0.5)*6);
+    bctx.stroke();
+  } else if(t==='#'){
+    bctx.fillStyle = '#9fae82';
+    bctx.fillRect(x,y,TILE,TILE);
+    bctx.save();
+    bctx.shadowColor='rgba(0,0,0,0.35)';
+    bctx.shadowBlur=4;
+    bctx.fillStyle='#c7b48c';
+    bctx.fillRect(x+2,y+8,TILE-4,TILE-10);
+    bctx.fillStyle='#8c3730';
+    bctx.beginPath();
+    bctx.moveTo(x, y+9);
+    bctx.lineTo(x+TILE/2, y-1);
+    bctx.lineTo(x+TILE, y+9);
+    bctx.closePath();
+    bctx.fill();
+    bctx.restore();
+  }
+}
+function bakeBackground(){
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) paintInkTile(c,r);
+}
+bakeBackground();
 
 // ---------- NPC definitions ----------
 const NPCS = [
@@ -336,35 +376,36 @@ const NPCS = [
    greet:'花點銀兩，跟我操練操練筋骨，包管你脫胎換骨！'},
 ];
 
-// ---------- Skill DB ----------
+// ---------- Skill DB (now with cooldown + range for real-time combat) ----------
 const SKILLS = {
-  luohan:  {id:'luohan', name:'羅漢拳', sect:'shaolin', tier:1, reqAttr:'str', reqVal:5, qi:5,
+  luohan:  {id:'luohan', name:'羅漢拳', sect:'shaolin', tier:1, reqAttr:'str', reqVal:5, qi:5, cd:3.0, range:52,
             dmg:(p)=>8+p.str*1.2, desc:'剛猛拳法，力量越高傷害越強'},
-  weituo:  {id:'weituo', name:'韋陀伏魔杖', sect:'shaolin', tier:2, reqAttr:'str', reqVal:12, need:'luohan', qi:11,
+  weituo:  {id:'weituo', name:'韋陀伏魔杖', sect:'shaolin', tier:2, reqAttr:'str', reqVal:12, need:'luohan', qi:11, cd:6.0, range:56,
             dmg:(p)=>16+p.str*1.6, desc:'少林棍法絕學，重擊傷敵'},
-  taiji:   {id:'taiji', name:'太極拳', sect:'wudang', tier:1, reqAttr:'agi', reqVal:5, reqAttr2:'int', reqVal2:5, qi:8,
+  taiji:   {id:'taiji', name:'太極拳', sect:'wudang', tier:1, reqAttr:'agi', reqVal:5, reqAttr2:'int', reqVal2:5, qi:8, cd:4.0, range:54,
             dmg:(p)=>6+((p.agi+p.int)/2)*1.1, desc:'以柔克剛，身法內力並重'},
-  liangyi: {id:'liangyi', name:'兩儀劍法', sect:'wudang', tier:2, reqAttr:'agi', reqVal:12, reqAttr2:'int', reqVal2:12, need:'taiji', qi:15,
+  liangyi: {id:'liangyi', name:'兩儀劍法', sect:'wudang', tier:2, reqAttr:'agi', reqVal:12, reqAttr2:'int', reqVal2:12, need:'taiji', qi:15, cd:7.0, range:60,
             dmg:(p)=>14+((p.agi+p.int)/2)*1.4, desc:'武當劍術精髓，攻守兼備'},
-  gougun:  {id:'gougun', name:'打狗棒法', sect:'beggar', tier:1, reqAttr:'agi', reqVal:5, qi:6,
+  gougun:  {id:'gougun', name:'打狗棒法', sect:'beggar', tier:1, reqAttr:'agi', reqVal:5, qi:6, cd:3.5, range:58,
             dmg:(p)=>7+p.agi*1.3, desc:'幫主絕學，身法越快越犀利'},
-  xianglong:{id:'xianglong', name:'降龍十八掌', sect:'beggar', tier:2, reqAttr:'agi', reqVal:15, reqAttr2:'str', reqVal2:10, need:'gougun', qi:20,
+  xianglong:{id:'xianglong', name:'降龍十八掌', sect:'beggar', tier:2, reqAttr:'agi', reqVal:15, reqAttr2:'str', reqVal2:10, need:'gougun', qi:20, cd:9.0, range:62,
             dmg:(p)=>25+p.agi*1+p.str*1, desc:'天下至剛掌法，一擊定勝負'},
 };
 const SECT_HALL = {shaolin:'少林殿', wudang:'武當觀', beggar:'丐幫堂'};
+const BASIC_CD = 0.6, BASIC_RANGE = 46;
 
 // ---------- Enemy DB ----------
-const ENEMIES = [
-  {id:'bandit', name:'山賊', hp:30, atk:6, def:2, xp:15, silver:10, color:'#7a5a3a', weight:34},
-  {id:'wolf', name:'惡狼', hp:24, atk:8, def:1, xp:12, silver:8, color:'#5a5a5a', weight:30},
-  {id:'rogue', name:'邪修散人', hp:46, atk:10, def:4, xp:30, silver:20, color:'#5a2a5a', weight:22},
-  {id:'python', name:'巨蟒', hp:62, atk:12, def:5, xp:45, silver:32, color:'#3a5a2a', weight:14},
+const ENEMY_DEFS = [
+  {id:'bandit', name:'山賊', hp:30, atk:6, def:2, xp:15, silver:10, color:'#7a5a3a', weight:34, speed:70, aggro:120, atkRange:34},
+  {id:'wolf', name:'惡狼', hp:24, atk:8, def:1, xp:12, silver:8, color:'#5a5a5a', weight:30, speed:95, aggro:130, atkRange:30},
+  {id:'rogue', name:'邪修散人', hp:46, atk:10, def:4, xp:30, silver:20, color:'#5a2a5a', weight:22, speed:65, aggro:140, atkRange:36},
+  {id:'python', name:'巨蟒', hp:62, atk:12, def:5, xp:45, silver:32, color:'#3a5a2a', weight:14, speed:55, aggro:110, atkRange:38},
 ];
-function pickEnemy(){
-  const total = ENEMIES.reduce((s,e)=>s+e.weight,0);
+function pickEnemyDef(){
+  const total = ENEMY_DEFS.reduce((s,e)=>s+e.weight,0);
   let r = Math.random()*total;
-  for(const e of ENEMIES){ if(r<e.weight) return e; r-=e.weight; }
-  return ENEMIES[0];
+  for(const e of ENEMY_DEFS){ if(r<e.weight) return e; r-=e.weight; }
+  return ENEMY_DEFS[0];
 }
 
 // ---------- Shop items ----------
@@ -391,11 +432,11 @@ function freshPlayer(){
     hp:0, maxHp:0, qi:0, maxQi:0,
     silver:60,
     learnedSkills:[],
+    hotbar:[null,null,null,null],
     inventory:{ hp_potion:1, qi_potion:1 },
     weapon:null, armor:null,
     trainCount:{str:0,agi:0,int:0,con:0},
     px: 5*TILE+TILE/2, py: 13*TILE+TILE/2,
-    facing:'down',
   };
 }
 let player = freshPlayer();
@@ -411,6 +452,34 @@ function recalcDerived(p, fillFull){
 function weaponPower(){ return player.weapon ? player.weapon.power : 0; }
 function armorDef(){ return player.armor ? player.armor.def : 0; }
 
+// ---------- Runtime combat state (not persisted) ----------
+let enemies = [];
+let nextUid = 1;
+let skillCd = {};       // skillId -> timestamp(ms) when ready
+let basicCdUntil = 0;
+let focusTarget = null; // enemy uid
+let invulnerableUntil = 0;
+let lastHitFlash = 0;
+let combo = {lastSkill:null, stacks:0, expireAt:0};
+let floaters = [];      // floating damage/text popups
+
+function spawnEnemy(){
+  if(enemies.length >= 5 || spawnTiles.length===0) return;
+  const def = pickEnemyDef();
+  const pos = spawnTiles[Math.floor(Math.random()*spawnTiles.length)];
+  enemies.push({
+    uid: nextUid++, def,
+    name:def.name, color:def.color,
+    hp:def.hp, maxHp:def.hp,
+    x:pos.x, y:pos.y, spawnX:pos.x, spawnY:pos.y,
+    state:'idle', stateTimer: Math.random()*2,
+  });
+}
+for(let i=0;i<5;i++) spawnEnemy();
+function scheduleRespawn(){
+  setTimeout(()=>{ if(!inputLocked) spawnEnemy(); else setTimeout(spawnEnemy, 3000); }, 8000+Math.random()*7000);
+}
+
 // ---------- Logging ----------
 const logBox = document.getElementById('logBox');
 function log(msg){
@@ -422,147 +491,348 @@ function log(msg){
   logBox.scrollTop = logBox.scrollHeight;
   while(logBox.children.length>60) logBox.removeChild(logBox.firstChild);
 }
+function popFloater(x,y,text,color){
+  floaters.push({x,y,text,color:color||'#c14a3e', life:1.0});
+}
 
 // ---------- Input ----------
 const keys = {};
-const gameKeys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D','e','E'];
+const moveKeys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'];
 window.addEventListener('keydown', e=>{
-  if(gameKeys.includes(e.key)) e.preventDefault();
+  if(moveKeys.includes(e.key) || e.key===' ' || ['1','2','3','4','e','E'].includes(e.key)) e.preventDefault();
   keys[e.key.toLowerCase()] = true;
   if(e.key==='e'||e.key==='E') tryInteract();
+  if(e.key===' ') useBasicAttack();
+  if(['1','2','3','4'].includes(e.key)) useHotbarSlot(parseInt(e.key,10)-1);
 });
 window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false; });
 
-let inputLocked = false; // true during dialogue / battle / overlays
+let inputLocked = false;
+
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+canvas.addEventListener('click', e=>{
+  if(inputLocked) return;
+  const rect = canvas.getBoundingClientRect();
+  const mx = (e.clientX-rect.left) * (CANVAS_W/rect.width);
+  const my = (e.clientY-rect.top) * (CANVAS_H/rect.height);
+  let hit=null, bestD=22;
+  enemies.forEach(en=>{
+    const d = Math.hypot(en.x-mx, en.y-my);
+    if(d<bestD){ bestD=d; hit=en; }
+  });
+  focusTarget = hit ? hit.uid : null;
+});
 
 // ---------- Movement / loop ----------
 let lastTime = performance.now();
-const SPEED = 150; // px per second
-let encounterCooldown = 0;
+const SPEED = 150;
+
+function findEnemyByUid(uid){ return enemies.find(e=>e.uid===uid); }
+
+function pickTarget(range){
+  if(focusTarget){
+    const t = findEnemyByUid(focusTarget);
+    if(t && Math.hypot(t.x-player.px, t.y-player.py) <= range) return t;
+  }
+  let best=null, bestD=range;
+  enemies.forEach(en=>{
+    const d = Math.hypot(en.x-player.px, en.y-player.py);
+    if(d<=bestD){ bestD=d; best=en; }
+  });
+  return best;
+}
+
+function applyPlayerDamage(target, rawDmg, comboKey){
+  const now = performance.now();
+  if(comboKey){
+    if(combo.lastSkill && combo.lastSkill!==comboKey && now<combo.expireAt){
+      combo.stacks = Math.min(3, combo.stacks+1);
+    } else {
+      combo.stacks = 0;
+    }
+    combo.lastSkill = comboKey;
+    combo.expireAt = now+2000;
+  } else {
+    combo.lastSkill = null; combo.stacks = 0;
+  }
+  const mult = 1 + combo.stacks*0.12;
+  const dmg = Math.max(1, Math.round((rawDmg - target.def) * mult));
+  target.hp -= dmg;
+  popFloater(target.x, target.y-18, (comboKey?'':'')+dmg + (combo.stacks>0?` x${combo.stacks+1}`:''), '#c14a3e');
+  if(target.hp<=0) killEnemy(target);
+}
+
+function killEnemy(target){
+  enemies = enemies.filter(e=>e.uid!==target.uid);
+  if(focusTarget===target.uid) focusTarget=null;
+  player.xp += target.def.xp;
+  player.silver += target.def.silver;
+  popFloater(target.x, target.y-30, `+${target.def.xp}經驗 +${target.def.silver}銀`, '#b08d43');
+  log(`你擊敗了${target.name}，獲得經驗 ${target.def.xp}、銀兩 ${target.def.silver}。`);
+  if(Math.random()<0.3){
+    const pot = Math.random()<0.5?'hp_potion':'qi_potion';
+    player.inventory[pot] = (player.inventory[pot]||0)+1;
+    log(`拾獲 ${pot==='hp_potion'?'金瘡藥':'續命丹'} x1。`);
+  }
+  let leveled=false;
+  while(player.xp >= player.xpNext){
+    player.xp -= player.xpNext;
+    player.level += 1;
+    player.xpNext = 50 + (player.level-1)*30;
+    player.freePoints += 3;
+    player.skillPoints += 1;
+    recalcDerived(player, true);
+    leveled=true;
+  }
+  if(leveled) log(`【升級】境界提升至 Lv.${player.level}！氣血內力已恢復，獲得可分配點數。`);
+  refreshSidebar();
+  scheduleRespawn();
+}
+
+function useBasicAttack(){
+  if(inputLocked) return;
+  const now = performance.now();
+  if(now < basicCdUntil) return;
+  const target = pickTarget(BASIC_RANGE);
+  if(!target){ return; }
+  basicCdUntil = now + BASIC_CD*1000;
+  const raw = 3 + player.str*0.5 + weaponPower();
+  applyPlayerDamage(target, raw, null);
+}
+function useHotbarSlot(idx){
+  if(inputLocked) return;
+  const sid = player.hotbar[idx];
+  if(!sid) return;
+  const s = SKILLS[sid];
+  const now = performance.now();
+  if((skillCd[sid]||0) > now) return;
+  if(player.qi < s.qi) { log('內力不足！'); return; }
+  const target = pickTarget(s.range);
+  if(!target){ return; }
+  player.qi -= s.qi;
+  skillCd[sid] = now + s.cd*1000;
+  const raw = s.dmg(player) + weaponPower()*0.5;
+  applyPlayerDamage(target, raw, sid);
+  updateHUD();
+}
+
+function updateEnemyAI(en, dt){
+  const now = performance.now();
+  const distToPlayer = Math.hypot(en.x-player.px, en.y-player.py);
+  switch(en.state){
+    case 'idle':
+      en.stateTimer -= dt;
+      if(distToPlayer < en.def.aggro){ en.state='chase'; }
+      break;
+    case 'chase': {
+      if(distToPlayer > en.def.aggro*1.8){ en.state='return'; break; }
+      if(distToPlayer <= en.def.atkRange){ en.state='windup'; en.stateTimer=0.45; break; }
+      const dx=player.px-en.x, dy=player.py-en.y, len=Math.hypot(dx,dy)||1;
+      const nx = en.x + dx/len*en.def.speed*dt;
+      const ny = en.y + dy/len*en.def.speed*dt;
+      if(!tileBlocked(nx,en.y)) en.x=nx;
+      if(!tileBlocked(en.x,ny)) en.y=ny;
+      break;
+    }
+    case 'windup':
+      en.stateTimer -= dt;
+      if(en.stateTimer<=0){
+        const d2 = Math.hypot(en.x-player.px, en.y-player.py);
+        if(d2 <= en.def.atkRange*1.3 && now>=invulnerableUntil){
+          const raw = en.def.atk + Math.random()*4;
+          const dmg = Math.max(1, Math.round(raw - armorDef() - player.con*0.2));
+          player.hp -= dmg;
+          invulnerableUntil = now+300;
+          lastHitFlash = now;
+          popFloater(player.px, player.py-18, '-'+dmg, '#e2564a');
+          log(`${en.name}擊中了你，造成 ${dmg} 傷害。`);
+          if(player.hp<=0) onPlayerDown();
+        } else if(d2 <= en.def.atkRange*1.3){
+          popFloater(player.px, player.py-18, '閃避', '#4f7d6c');
+        }
+        en.state='cooldown'; en.stateTimer=0.9;
+      }
+      break;
+    case 'cooldown':
+      en.stateTimer -= dt;
+      if(en.stateTimer<=0) en.state = distToPlayer<=en.def.aggro ? 'chase' : 'return';
+      break;
+    case 'return': {
+      const dx=en.spawnX-en.x, dy=en.spawnY-en.y, len=Math.hypot(dx,dy);
+      if(len<4){ en.state='idle'; en.stateTimer=1; break; }
+      if(distToPlayer < en.def.aggro*0.8){ en.state='chase'; break; }
+      const nx = en.x + dx/len*en.def.speed*dt;
+      const ny = en.y + dy/len*en.def.speed*dt;
+      if(!tileBlocked(nx,en.y)) en.x=nx;
+      if(!tileBlocked(en.x,ny)) en.y=ny;
+      break;
+    }
+  }
+}
+
+function onPlayerDown(){
+  const deathFlash = document.getElementById('deathFlash');
+  deathFlash.classList.add('show');
+  setTimeout(()=>deathFlash.classList.remove('show'), 700);
+  const penalty = Math.min(player.silver, 15);
+  player.silver -= penalty;
+  player.hp = Math.floor(player.maxHp*0.4);
+  player.qi = Math.floor(player.maxQi*0.4);
+  player.px = 5*TILE+TILE/2; player.py = 13*TILE+TILE/2;
+  invulnerableUntil = performance.now()+2000;
+  log(`你力竭倒地，被村人所救，損失了${penalty}銀兩，返回村中。`);
+  updateHUD();
+}
 
 function update(dt){
   if(inputLocked) return;
   let vx=0, vy=0;
-  if(keys['arrowup']||keys['w']){ vy=-1; player.facing='up'; }
-  if(keys['arrowdown']||keys['s']){ vy=1; player.facing='down'; }
-  if(keys['arrowleft']||keys['a']){ vx=-1; player.facing='left'; }
-  if(keys['arrowright']||keys['d']){ vx=1; player.facing='right'; }
+  if(keys['arrowup']||keys['w']) vy=-1;
+  if(keys['arrowdown']||keys['s']) vy=1;
+  if(keys['arrowleft']||keys['a']) vx=-1;
+  if(keys['arrowright']||keys['d']) vx=1;
   if(vx!==0 && vy!==0){ vx*=0.7071; vy*=0.7071; }
 
   const nx = player.px + vx*SPEED*dt;
   const ny = player.py + vy*SPEED*dt;
   const margin = 8;
-  if(vx!==0){
-    if(!tileBlocked(nx+Math.sign(vx)*margin, player.py-margin) && !tileBlocked(nx+Math.sign(vx)*margin, player.py+margin)){
-      player.px = nx;
-    }
+  if(vx!==0 && !tileBlocked(nx+Math.sign(vx)*margin, player.py-margin) && !tileBlocked(nx+Math.sign(vx)*margin, player.py+margin)){
+    player.px = nx;
   }
-  if(vy!==0){
-    if(!tileBlocked(player.px-margin, ny+Math.sign(vy)*margin) && !tileBlocked(player.px+margin, ny+Math.sign(vy)*margin)){
-      player.py = ny;
-    }
+  if(vy!==0 && !tileBlocked(player.px-margin, ny+Math.sign(vy)*margin) && !tileBlocked(player.px+margin, ny+Math.sign(vy)*margin)){
+    player.py = ny;
   }
   player.px = Math.max(TILE/2, Math.min(CANVAS_W-TILE/2, player.px));
   player.py = Math.max(TILE/2, Math.min(CANVAS_H-TILE/2, player.py));
 
-  if(encounterCooldown>0) encounterCooldown -= dt;
-  if((vx!==0||vy!==0) && encounterCooldown<=0){
-    const c = Math.floor(player.px/TILE), r = Math.floor(player.py/TILE);
-    if(grid[r][c]===','){
-      if(Math.random() < 0.012){
-        encounterCooldown = 1.2;
-        startBattle();
-      }
-    }
-  }
+  enemies.forEach(en=>updateEnemyAI(en, dt));
+
+  floaters.forEach(f=>{ f.y -= 22*dt; f.life -= dt*0.9; });
+  floaters = floaters.filter(f=>f.life>0);
+
+  if(player.hp<=0) onPlayerDown();
+  updateHotbarUI();
+  updateHUD();
 }
 
-function drawTile(c,r){
-  const x=c*TILE, y=r*TILE;
-  const t = grid[r][c];
-  if(t==='.'){
-    ctx.fillStyle = COLORS.path;
-    ctx.fillRect(x,y,TILE,TILE);
-    ctx.fillStyle = COLORS.pathEdge;
-    if((c+r)%2===0) ctx.fillRect(x,y,TILE,4);
-  } else if(t===','){
-    ctx.fillStyle = (c+r)%2===0 ? COLORS.grass : COLORS.grass2;
-    ctx.fillRect(x,y,TILE,TILE);
-  } else if(t==='T'){
-    ctx.fillStyle = (c+r)%2===0 ? COLORS.grass : COLORS.grass2;
-    ctx.fillRect(x,y,TILE,TILE);
-    ctx.fillStyle = COLORS.treeTrunk;
-    ctx.fillRect(x+TILE/2-3,y+TILE-10,6,10);
-    ctx.fillStyle = COLORS.tree;
-    ctx.beginPath();
-    ctx.arc(x+TILE/2, y+TILE/2-2, TILE/2-2, 0, Math.PI*2);
-    ctx.fill();
-  } else if(t==='~'){
-    ctx.fillStyle = (c+r)%2===0 ? COLORS.water : COLORS.water2;
-    ctx.fillRect(x,y,TILE,TILE);
-  } else if(t==='#'){
-    ctx.fillStyle = COLORS.wall;
-    ctx.fillRect(x,y,TILE,TILE);
-    ctx.fillStyle = COLORS.wallRoof;
-    ctx.fillRect(x,y,TILE,8);
-  }
-}
-
-function drawPerson(cx, cy, robeColor, facing, bob){
-  const s = TILE/28; // scale unit
+// ---------- Rendering ----------
+function drawInkFigure(cx, cy, robeColor, opts){
+  opts = opts||{};
+  const s = TILE/28;
   ctx.save();
-  ctx.translate(cx, cy + (bob||0));
-  // shadow
-  ctx.fillStyle='rgba(0,0,0,.35)';
+  ctx.translate(cx, cy);
+  ctx.fillStyle='rgba(0,0,0,.28)';
   ctx.beginPath();
-  ctx.ellipse(0, 11*s, 8*s, 3*s, 0,0,Math.PI*2);
+  ctx.ellipse(0, 11*s, 9*s, 3*s, 0,0,Math.PI*2);
   ctx.fill();
-  // legs
-  ctx.fillStyle='#2a1f18';
-  ctx.fillRect(-5*s, 3*s, 4*s, 8*s);
-  ctx.fillRect(1*s, 3*s, 4*s, 8*s);
-  // robe/body
-  ctx.fillStyle=robeColor;
-  ctx.fillRect(-7*s, -7*s, 14*s, 12*s);
-  // head
-  ctx.fillStyle='#e8c39e';
-  ctx.fillRect(-5*s, -16*s, 10*s, 9*s);
-  // hair
-  ctx.fillStyle='#1a1410';
-  ctx.fillRect(-5*s, -17*s, 10*s, 4*s);
-  if(facing==='left'){ ctx.fillRect(-6*s,-15*s,2*s,7*s); }
-  if(facing==='right'){ ctx.fillRect(4*s,-15*s,2*s,7*s); }
-  // eyes (facing down/front default)
-  if(facing!=='up'){
-    ctx.fillStyle='#1a1410';
-    ctx.fillRect(-3*s,-11*s,2*s,2*s);
-    ctx.fillRect(1*s,-11*s,2*s,2*s);
+  if(opts.flash){
+    ctx.shadowColor='#ffdca0'; ctx.shadowBlur=14;
+  } else {
+    ctx.shadowColor='rgba(30,25,20,.4)'; ctx.shadowBlur=4;
   }
+  ctx.globalAlpha = opts.alpha!==undefined ? opts.alpha : 1;
+  const grad = ctx.createLinearGradient(0,-10*s,0,9*s);
+  grad.addColorStop(0, lighten(robeColor,12));
+  grad.addColorStop(1, robeColor);
+  ctx.fillStyle=grad;
+  ctx.beginPath();
+  ctx.moveTo(-8*s,9*s);
+  ctx.quadraticCurveTo(-9*s,-3*s,-4*s,-9*s);
+  ctx.quadraticCurveTo(0,-12*s,4*s,-9*s);
+  ctx.quadraticCurveTo(9*s,-3*s,8*s,9*s);
+  ctx.closePath();
+  ctx.fill();
+  ctx.shadowBlur=0;
+  ctx.fillStyle='#ecd4a8';
+  ctx.beginPath();
+  ctx.arc(0,-13*s,5*s,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle='#241d16';
+  ctx.beginPath();
+  ctx.arc(0,-17*s,2.4*s,0,Math.PI*2);
+  ctx.fill();
   ctx.restore();
 }
-
-let animTick = 0;
-function render(){
-  ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) drawTile(c,r);
-
-  // NPC labels + sprites
-  NPCS.forEach(n=>{
-    const cx = n.x*TILE+TILE/2, cy = n.y*TILE+TILE/2;
-    drawPerson(cx, cy, n.color, 'down', 0);
-    ctx.fillStyle='#000';
-    ctx.font='9px sans-serif';
-    const w = ctx.measureText(n.name).width;
-    ctx.fillStyle='rgba(0,0,0,.55)';
-    ctx.fillRect(cx-w/2-3, cy-30, w+6, 12);
-    ctx.fillStyle='#e9dcbd';
-    ctx.fillText(n.name, cx-w/2, cy-21);
-  });
-
-  const bob = Math.sin(animTick*8)*2 * (Math.hypot(keys['arrowup']||keys['w']?1:0,0)>=0 && (keys['arrowup']||keys['arrowdown']||keys['arrowleft']||keys['arrowright']||keys['w']||keys['a']||keys['s']||keys['d']) ? 1:0);
-  drawPerson(player.px, player.py, '#a3352c', player.facing, bob);
+function lighten(hex, amt){
+  const n = parseInt(hex.slice(1),16);
+  let r=(n>>16)+amt, g=((n>>8)&0xff)+amt, b=(n&0xff)+amt;
+  r=Math.min(255,Math.max(0,r)); g=Math.min(255,Math.max(0,g)); b=Math.min(255,Math.max(0,b));
+  return `rgb(${r},${g},${b})`;
 }
 
+function nearbyNPC(){
+  const pc = Math.floor(player.px/TILE), pr = Math.floor(player.py/TILE);
+  let best=null, bestD=99;
+  NPCS.forEach(n=>{
+    const d = Math.abs(n.x-pc)+Math.abs(n.y-pr);
+    if(d<=1 && d<bestD){ bestD=d; best=n; }
+  });
+  return best;
+}
+
+function render(){
+  ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.drawImage(bgCanvas,0,0);
+
+  NPCS.forEach(n=>{
+    const cx = n.x*TILE+TILE/2, cy = n.y*TILE+TILE/2;
+    drawInkFigure(cx, cy, n.color);
+    ctx.font='11px "Noto Serif TC", serif';
+    const w = ctx.measureText(n.name).width;
+    ctx.fillStyle='rgba(40,30,20,.55)';
+    ctx.fillRect(cx-w/2-3, cy-32, w+6, 14);
+    ctx.fillStyle='#f0e6c8';
+    ctx.fillText(n.name, cx-w/2, cy-22);
+  });
+
+  enemies.forEach(en=>{
+    const flash = en.state==='windup';
+    drawInkFigure(en.x, en.y, en.color, {flash});
+    const bw=34, bh=5;
+    ctx.fillStyle='rgba(0,0,0,.5)';
+    ctx.fillRect(en.x-bw/2, en.y-30, bw, bh);
+    ctx.fillStyle='#c14a3e';
+    ctx.fillRect(en.x-bw/2, en.y-30, bw*Math.max(0,en.hp/en.maxHp), bh);
+    ctx.font='10px "Noto Serif TC", serif';
+    ctx.fillStyle='#3a2f22';
+    ctx.fillText(en.name, en.x-ctx.measureText(en.name).width/2, en.y-33);
+    if(en.uid===focusTarget){
+      ctx.strokeStyle='#a3352c';
+      ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.arc(en.x, en.y+2, 17, 0, Math.PI*2);
+      ctx.stroke();
+    }
+  });
+
+  const now = performance.now();
+  const invuln = now < invulnerableUntil;
+  const alpha = invuln ? (Math.floor(now/80)%2===0 ? 0.4:1) : 1;
+  drawInkFigure(player.px, player.py, '#a3352c', {alpha});
+
+  const n = nearbyNPC();
+  if(n && !inputLocked){
+    ctx.fillStyle='#2b2621';
+    ctx.font='11px "Noto Serif TC", serif';
+    const t = `E 與 ${n.name.split(' ')[0]} 交談`;
+    const w = ctx.measureText(t).width;
+    ctx.fillStyle='rgba(240,230,200,.85)';
+    ctx.fillRect(player.px-w/2-4, player.py+16, w+8, 16);
+    ctx.fillStyle='#2b2621';
+    ctx.fillText(t, player.px-w/2, player.py+28);
+  }
+
+  floaters.forEach(f=>{
+    ctx.globalAlpha = Math.max(0,f.life);
+    ctx.font='bold 13px "Noto Serif TC", serif';
+    ctx.fillStyle=f.color;
+    ctx.fillText(f.text, f.x-ctx.measureText(f.text).width/2, f.y);
+    ctx.globalAlpha=1;
+  });
+}
+
+let animTick=0;
 function loop(now){
   const dt = Math.min(0.05, (now-lastTime)/1000);
   lastTime = now;
@@ -573,15 +843,6 @@ function loop(now){
 }
 
 // ---------- Interaction ----------
-function nearbyNPC(){
-  const pc = Math.floor(player.px/TILE), pr = Math.floor(player.py/TILE);
-  let best=null, bestD=99;
-  NPCS.forEach(n=>{
-    const d = Math.abs(n.x-pc)+Math.abs(n.y-pr);
-    if(d<=1 && d<bestD){ bestD=d; best=n; }
-  });
-  return best;
-}
 function tryInteract(){
   if(inputLocked) return;
   const n = nearbyNPC();
@@ -614,6 +875,12 @@ function choiceBtn(label, desc, onClick, disabled){
   b.onclick = onClick;
   return b;
 }
+function assignToFirstEmptySlot(skillId){
+  const idx = player.hotbar.findIndex(s=>!s);
+  if(idx>=0) player.hotbar[idx] = skillId;
+}
+function attrLabel(a){ return {str:'力量',agi:'身法',int:'內力',con:'根骨'}[a]||a; }
+
 function renderDialogBody(npc){
   dlgChoices.innerHTML='';
   dlgText.textContent = npc.greet;
@@ -625,13 +892,14 @@ function renderDialogBody(npc){
       const needOk = !s.need || player.learnedSkills.includes(s.need);
       const attrOk = player[s.reqAttr] >= s.reqVal && (!s.reqAttr2 || player[s.reqAttr2]>=s.reqVal2);
       const ptOk = player.skillPoints >= 1;
-      const reqTxt = `需求：${attrLabel(s.reqAttr)}≥${s.reqVal}` + (s.reqAttr2?`、${attrLabel(s.reqAttr2)}≥${s.reqVal2}`:'') + (s.need?`、已學${SKILLS[s.need].name}`:'') + `　消耗：1武學點`;
+      const reqTxt = `需求：${attrLabel(s.reqAttr)}≥${s.reqVal}` + (s.reqAttr2?`、${attrLabel(s.reqAttr2)}≥${s.reqVal2}`:'') + (s.need?`、已學${SKILLS[s.need].name}`:'') + `　消耗：1武學點　冷卻：${s.cd}秒`;
       let label = learned ? `✔ ${s.name}（已學會）` : `習得 ${s.name}`;
       let disabled = learned || !needOk || !attrOk || !ptOk;
       let desc = s.desc + '　|　' + reqTxt;
       dlgChoices.appendChild(choiceBtn(label, desc, ()=>{
         player.skillPoints -= 1;
         player.learnedSkills.push(s.id);
+        assignToFirstEmptySlot(s.id);
         log(`你習得了「${s.name}」！`);
         renderDialogBody(npc);
         refreshSidebar();
@@ -678,209 +946,48 @@ function renderDialogBody(npc){
     });
   }
 }
-function attrLabel(a){ return {str:'力量',agi:'身法',int:'內力',con:'根骨'}[a]||a; }
 
-// ---------- Battle system ----------
-const battleOverlay = document.getElementById('battleOverlay');
-const battleActions = document.getElementById('battleActions');
-const battleLog = document.getElementById('battleLog');
-let battle = null;
-
-function svgSprite(el, color){
-  el.innerHTML = `<rect x="6" y="9" width="8" height="8" fill="${color}"/><rect x="7" y="2" width="6" height="6" fill="#e8c39e"/><rect x="7" y="2" width="6" height="2" fill="#1a1410"/>`;
+// ---------- Hotbar UI ----------
+const hotbarEl = document.getElementById('hotbar');
+function buildHotbarDOM(){
+  hotbarEl.innerHTML='';
+  for(let i=0;i<4;i++){
+    const box = document.createElement('div');
+    box.className='slot empty';
+    box.dataset.idx = i;
+    box.innerHTML = `<span class="key">${i+1}</span><span class="label">空</span><div class="cd" style="height:0"></div>`;
+    hotbarEl.appendChild(box);
+  }
+  const basic = document.createElement('div');
+  basic.className='slot basic';
+  basic.innerHTML = `<span class="key">␣</span><span class="label">基本攻擊</span><div class="cd" style="height:0"></div>`;
+  hotbarEl.appendChild(basic);
 }
-
-function startBattle(){
-  const e = pickEnemy();
-  battle = {
-    enemy: {...e, curHp:e.hp},
-    combo:{lastSkill:null, stacks:0},
-    turnBusy:false,
-  };
-  inputLocked = true;
-  battleOverlay.classList.add('show');
-  document.getElementById('battleTitle').textContent = `遭遇 ${e.name}！`;
-  document.getElementById('beName').textContent = e.name;
-  svgSprite(document.getElementById('battlePlayerSprite'), '#a3352c');
-  svgSprite(document.getElementById('battleEnemySprite'), e.color);
-  battleLog.innerHTML='';
-  battleLogPush(`一名${e.name}擋住了去路！`);
-  renderBattleUI();
-}
-function battleLogPush(msg){
-  const d = document.createElement('div');
-  d.textContent = msg;
-  battleLog.appendChild(d);
-  battleLog.scrollTop = battleLog.scrollHeight;
-}
-function renderBattleUI(){
-  const p = player, e = battle.enemy;
-  document.getElementById('bpHpBar').style.width = (p.hp/p.maxHp*100)+'%';
-  document.getElementById('bpHpText').textContent = `${Math.ceil(p.hp)}/${p.maxHp}`;
-  document.getElementById('bpQiBar').style.width = (p.qi/p.maxQi*100)+'%';
-  document.getElementById('bpQiText').textContent = `${Math.ceil(p.qi)}/${p.maxQi}`;
-  document.getElementById('beHpBar').style.width = (e.curHp/e.hp*100)+'%';
-  document.getElementById('beHpText').textContent = `${Math.max(0,Math.ceil(e.curHp))}/${e.hp}`;
-
-  battleActions.innerHTML='';
-  const basic = document.createElement('button');
-  basic.innerHTML = `基本攻擊<span class="desc">無需內力，穩定傷害</span>`;
-  basic.disabled = battle.turnBusy;
-  basic.onclick = ()=>playerAction({type:'basic'});
-  battleActions.appendChild(basic);
-
-  player.learnedSkills.forEach(sid=>{
+buildHotbarDOM();
+function updateHotbarUI(){
+  const now = performance.now();
+  const boxes = hotbarEl.querySelectorAll('.slot');
+  for(let i=0;i<4;i++){
+    const sid = player.hotbar[i];
+    const box = boxes[i];
+    if(!sid){ box.className='slot empty'; box.querySelector('.label').textContent='空'; box.querySelector('.cd').style.height='0'; continue; }
     const s = SKILLS[sid];
-    const canUse = player.qi >= s.qi;
-    const b = document.createElement('button');
-    b.innerHTML = `${s.name}<span class="desc">內力-${s.qi}　${s.desc}</span>`;
-    b.disabled = !canUse || battle.turnBusy;
-    b.onclick = ()=>playerAction({type:'skill', skill:s});
-    battleActions.appendChild(b);
-  });
-
-  const itemBtn = document.createElement('button');
-  const hpCount = player.inventory.hp_potion||0, qiCount = player.inventory.qi_potion||0;
-  itemBtn.innerHTML = `使用金瘡藥(${hpCount})<span class="desc">恢復氣血30</span>`;
-  itemBtn.disabled = hpCount<=0 || battle.turnBusy;
-  itemBtn.onclick = ()=>playerAction({type:'item', item:'hp_potion'});
-  battleActions.appendChild(itemBtn);
-
-  const itemBtn2 = document.createElement('button');
-  itemBtn2.innerHTML = `使用續命丹(${qiCount})<span class="desc">恢復內力20</span>`;
-  itemBtn2.disabled = qiCount<=0 || battle.turnBusy;
-  itemBtn2.onclick = ()=>playerAction({type:'item', item:'qi_potion'});
-  battleActions.appendChild(itemBtn2);
-
-  const fleeBtn = document.createElement('button');
-  fleeBtn.innerHTML = `逃走<span class="desc">成功率隨身法提升</span>`;
-  fleeBtn.disabled = battle.turnBusy;
-  fleeBtn.onclick = ()=>playerAction({type:'flee'});
-  battleActions.appendChild(fleeBtn);
-}
-
-function playerAction(action){
-  if(battle.turnBusy) return;
-  battle.turnBusy = true;
-  const p = player, e = battle.enemy;
-
-  if(action.type==='flee'){
-    const chance = 0.5 + p.agi*0.01;
-    if(Math.random()<chance){
-      battleLogPush('你成功脫身，逃離了戰鬥。');
-      endBattle(false);
-      return;
-    } else {
-      battleLogPush('逃跑失敗！');
-      enemyTurn();
-      return;
-    }
+    box.className='slot';
+    box.querySelector('.label').textContent = s.name;
+    let qiEl = box.querySelector('.qi');
+    if(!qiEl){ qiEl=document.createElement('span'); qiEl.className='qi'; box.appendChild(qiEl); }
+    qiEl.textContent = s.qi;
+    const ready = (skillCd[sid]||0);
+    const remain = Math.max(0, ready-now);
+    const pct = Math.min(1, remain/(s.cd*1000));
+    const cdEl = box.querySelector('.cd');
+    cdEl.style.height = (pct*100)+'%';
+    cdEl.textContent = pct>0 ? Math.ceil(remain/1000) : '';
   }
-  if(action.type==='item'){
-    const inv = player.inventory;
-    if((inv[action.item]||0)<=0){ battle.turnBusy=false; return; }
-    inv[action.item] -= 1;
-    if(action.item==='hp_potion'){ p.hp = Math.min(p.maxHp, p.hp+30); battleLogPush('你服下金瘡藥，恢復了氣血。'); }
-    else { p.qi = Math.min(p.maxQi, p.qi+20); battleLogPush('你服下續命丹，恢復了內力。'); }
-    renderBattleUI();
-    enemyTurn();
-    return;
-  }
-
-  let raw, skillName;
-  if(action.type==='basic'){
-    raw = 3 + p.str*0.5 + weaponPower();
-    skillName = null;
-    battle.combo.lastSkill = null; battle.combo.stacks = 0;
-  } else {
-    const s = action.skill;
-    p.qi -= s.qi;
-    raw = s.dmg(p) + weaponPower()*0.5;
-    skillName = s.id;
-    if(battle.combo.lastSkill && battle.combo.lastSkill!==skillName){
-      battle.combo.stacks = Math.min(3, battle.combo.stacks+1);
-    } else if(battle.combo.lastSkill===skillName){
-      battle.combo.stacks = 0;
-    } else {
-      battle.combo.stacks = 0;
-    }
-    battle.combo.lastSkill = skillName;
-  }
-  const comboMult = 1 + battle.combo.stacks*0.12;
-  let dmg = Math.max(1, Math.round((raw - e.def) * comboMult));
-  e.curHp -= dmg;
-  const comboTxt = battle.combo.stacks>0 ? `（連招 x${battle.combo.stacks+1}）` : '';
-  battleLogPush(`你使出${action.type==='basic'?'基本攻擊':SKILLS[skillName].name}，造成 ${dmg} 傷害${comboTxt}！`);
-  renderBattleUI();
-
-  if(e.curHp<=0){
-    battleLogPush(`${e.name}被你擊敗了！`);
-    winBattle();
-    return;
-  }
-  enemyTurn();
-}
-
-function enemyTurn(){
-  const p = player, e = battle.enemy;
-  setTimeout(()=>{
-    const dodge = Math.random() < p.agi*0.012;
-    if(dodge){
-      battleLogPush(`你身法一閃，避開了${e.name}的攻擊！`);
-    } else {
-      const raw = e.atk + Math.random()*4;
-      const dmg = Math.max(1, Math.round(raw - armorDef() - p.con*0.2));
-      p.hp -= dmg;
-      battleLogPush(`${e.name}攻擊你，造成 ${dmg} 傷害。`);
-    }
-    renderBattleUI();
-    if(p.hp<=0){
-      battleLogPush('你身受重傷，眼前一黑……');
-      setTimeout(()=>loseBattle(), 900);
-      return;
-    }
-    battle.turnBusy = false;
-    renderBattleUI();
-  }, 500);
-}
-
-function winBattle(){
-  const e = battle.enemy;
-  player.xp += e.xp;
-  player.silver += e.silver;
-  battleLogPush(`獲得經驗 ${e.xp}，銀兩 ${e.silver}。`);
-  if(Math.random()<0.3){
-    const pot = Math.random()<0.5?'hp_potion':'qi_potion';
-    player.inventory[pot] = (player.inventory[pot]||0)+1;
-    battleLogPush(`拾獲了 ${pot==='hp_potion'?'金瘡藥':'續命丹'} x1。`);
-  }
-  let leveled=false;
-  while(player.xp >= player.xpNext){
-    player.xp -= player.xpNext;
-    player.level += 1;
-    player.xpNext = 50 + (player.level-1)*30;
-    player.freePoints += 3;
-    player.skillPoints += 1;
-    recalcDerived(player, true);
-    leveled=true;
-  }
-  if(leveled) battleLogPush(`【升級】你的境界提升至 Lv.${player.level}！氣血內力已全部恢復，獲得可分配點數。`);
-  setTimeout(()=>endBattle(true), 1100);
-}
-function loseBattle(){
-  player.hp = Math.floor(player.maxHp*0.4);
-  player.qi = Math.floor(player.maxQi*0.4);
-  const penalty = Math.min(player.silver, 15);
-  player.silver -= penalty;
-  player.px = 5*TILE+TILE/2; player.py = 13*TILE+TILE/2;
-  log(`你敗下陣來，被村人所救，損失了${penalty}銀兩，返回了村中。`);
-  endBattle(false);
-}
-function endBattle(won){
-  battleOverlay.classList.remove('show');
-  battle = null;
-  inputLocked = false;
-  refreshSidebar();
+  const basicBox = boxes[4];
+  const remain = Math.max(0, basicCdUntil-now);
+  const pct = Math.min(1, remain/(BASIC_CD*1000));
+  basicBox.querySelector('.cd').style.height=(pct*100)+'%';
 }
 
 // ---------- Sidebar ----------
@@ -920,7 +1027,22 @@ function refreshSidebar(){
     const s = SKILLS[sid];
     const d = document.createElement('div');
     d.className='skill-item';
-    d.innerHTML = `<span>${s.name}</span><span class="tag">${SECT_HALL[s.sect]||s.sect}</span>`;
+    d.innerHTML = `<div class="sname">${s.name} <span class="small-note" style="display:inline;">(${SECT_HALL[s.sect]})</span></div>`;
+    const slotsRow = document.createElement('div');
+    slotsRow.className='skill-slots';
+    for(let i=0;i<4;i++){
+      const b = document.createElement('button');
+      b.textContent = i+1;
+      if(player.hotbar[i]===sid) b.classList.add('active');
+      b.onclick = ()=>{
+        const existing = player.hotbar.indexOf(sid);
+        if(existing>=0) player.hotbar[existing]=null;
+        player.hotbar[i] = sid;
+        refreshSidebar();
+      };
+      slotsRow.appendChild(b);
+    }
+    d.appendChild(slotsRow);
     skillList.appendChild(d);
   });
 
@@ -968,7 +1090,7 @@ function updateHUD(){
 }
 
 // ---------- Save / Load ----------
-const SAVE_KEY = 'wuxia_save_v1';
+const SAVE_KEY = 'wuxia_save_v2';
 async function saveGame(){
   try{
     const data = JSON.stringify(player);
@@ -985,6 +1107,7 @@ async function loadGame(silent){
     if(res && res.value){
       const data = JSON.parse(res.value);
       player = Object.assign(freshPlayer(), data);
+      if(!player.hotbar) player.hotbar=[null,null,null,null];
       recalcDerived(player, false);
       refreshSidebar();
       if(!silent) log('讀檔成功。');
@@ -1025,7 +1148,7 @@ document.getElementById('btnStartLoad').onclick = async ()=>{
 };
 
 // ---------- Init ----------
-inputLocked = true; // locked until start overlay dismissed
+inputLocked = true;
 refreshSidebar();
 requestAnimationFrame((t)=>{ lastTime=t; requestAnimationFrame(loop); });
 
