@@ -179,8 +179,10 @@ button:disabled{opacity:.4;cursor:not-allowed;}
     <div class="stat-mini">氣血 <div class="bar-outer"><div class="bar-inner bar-hp" id="hudHpBar" style="width:100%"></div></div> <span id="hudHpText">50/50</span></div>
     <div class="stat-mini">內力 <div class="bar-outer"><div class="bar-inner bar-qi" id="hudQiBar" style="width:100%"></div></div> <span id="hudQiText">20/20</span></div>
     <div class="stat-mini">銀兩 <span id="hudSilver">50</span></div>
+    <div class="stat-mini" id="hudZone" style="display:none;color:#4f7d6c;font-weight:700;">🏮 安全區 · 回復加倍</div>
   </div>
   <div class="topbtns">
+    <button id="btnKeybind">按鍵設定</button>
     <button id="btnSave">存檔</button>
     <button id="btnLoad">讀檔</button>
     <button id="btnNew">重新開始</button>
@@ -191,7 +193,7 @@ button:disabled{opacity:.4;cursor:not-allowed;}
   <div class="canvasCol">
     <canvas id="gameCanvas" width="672" height="448"></canvas>
     <div class="hotbar" id="hotbar"></div>
-    <div class="hint">WASD / 方向鍵 移動　　1 2 3 4 施展武功　　空白鍵 基本攻擊　　滑鼠點擊敵人鎖定目標　　E 與人互動</div>
+    <div class="hint">WASD / 方向鍵 移動　　武功與攻擊可按鍵或滑鼠點擊技能欄施展　　Q 使用金瘡藥　R 使用續命丹　　滑鼠點擊敵人鎖定目標　　E 與人互動　　按鍵皆可於右上角「按鍵設定」自訂</div>
     <div class="log" id="logBox"></div>
   </div>
 
@@ -244,6 +246,16 @@ button:disabled{opacity:.4;cursor:not-allowed;}
     <h2 id="skillUpName">武學精進</h2>
     <div class="npc-line" id="skillUpText"></div>
     <div id="skillUpChoices"></div>
+  </div>
+</div>
+
+<!-- KEYBIND OVERLAY -->
+<div class="overlay" id="keybindOverlay">
+  <div class="modal">
+    <h2>按鍵設定</h2>
+    <div class="npc-line">點擊按鍵後，按下想要設定的新按鍵即可（方向鍵/WASD 為固定移動鍵，無法覆蓋）。武功也能直接用滑鼠點擊下方技能欄施展。</div>
+    <div id="keybindList"></div>
+    <button id="keybindClose" style="margin-top:10px;">關閉</button>
   </div>
 </div>
 
@@ -439,8 +451,8 @@ const ARMORS = [
   {id:'a3', name:'玄鐵甲', def:9, price:160},
 ];
 const POTIONS = [
-  {id:'hp_potion', name:'金瘡藥', type:'hp', amount:30, price:15},
-  {id:'qi_potion', name:'續命丹', type:'qi', amount:20, price:15},
+  {id:'hp_potion', name:'金瘡藥', type:'hp', amount:30, price:15, desc:'服用後立即恢復30點氣血'},
+  {id:'qi_potion', name:'續命丹', type:'qi', amount:20, price:15, desc:'服用後立即恢復20點內力'},
 ];
 
 // ---------- Player state ----------
@@ -457,6 +469,7 @@ function freshPlayer(){
     weapon:null, armor:null,
     trainCount:{str:0,agi:0,int:0,con:0},
     px: 5*TILE+TILE/2, py: 13*TILE+TILE/2,
+    facing:'down',
   };
 }
 let player = freshPlayer();
@@ -545,6 +558,7 @@ let floaters = [];      // floating damage/text popups
 let particles = [];     // hit-spark particles
 let screenShake = {time:0, mag:0};
 let hitStopUntil = 0;
+let playerAttackAnim = {start:0, duration:220};
 
 function spawnEnemy(){
   if(enemies.length >= 5 || spawnTiles.length===0) return;
@@ -599,12 +613,62 @@ function triggerImpact(x,y,opts){
 // ---------- Input ----------
 const keys = {};
 const moveKeys = ['ArrowUp','ArrowDown','ArrowLeft','ArrowRight','w','a','s','d','W','A','S','D'];
+
+let keyBindings = {
+  skill1:'1', skill2:'2', skill3:'3', skill4:'4',
+  basic:' ', interact:'e', useHp:'q', useQi:'r',
+};
+const ACTION_LABELS = {
+  skill1:'技能欄 1', skill2:'技能欄 2', skill3:'技能欄 3', skill4:'技能欄 4',
+  basic:'基本攻擊', interact:'互動 / 交談', useHp:'使用金瘡藥', useQi:'使用續命丹',
+};
+let rebindingAction = null;
+function normalizeKey(k){ return k===' ' ? 'space' : k.toLowerCase(); }
+function keyLabel(k){ return k===' ' ? '空白鍵' : k.toUpperCase(); }
+function findActionForKey(k){
+  const nk = normalizeKey(k);
+  for(const action in keyBindings){ if(normalizeKey(keyBindings[action])===nk) return action; }
+  return null;
+}
+function triggerAction(action){
+  if(action==='interact') tryInteract();
+  else if(action==='basic') useBasicAttack();
+  else if(action==='useHp') useItem('hp_potion');
+  else if(action==='useQi') useItem('qi_potion');
+  else if(action && action.indexOf('skill')===0) useHotbarSlot(parseInt(action.slice(5),10)-1);
+}
+async function saveKeyBindings(){
+  try{ await window.storage.set('wuxia_keybinds_v1', JSON.stringify(keyBindings), false); }catch(err){ console.error(err); }
+}
+async function loadKeyBindings(){
+  try{
+    const res = await window.storage.get('wuxia_keybinds_v1', false);
+    if(res && res.value) keyBindings = Object.assign({}, keyBindings, JSON.parse(res.value));
+  }catch(err){ /* no saved bindings yet */ }
+}
+
 window.addEventListener('keydown', e=>{
-  if(moveKeys.includes(e.key) || e.key===' ' || ['1','2','3','4','e','E'].includes(e.key)) e.preventDefault();
+  if(rebindingAction){
+    e.preventDefault();
+    const raw = e.key===' ' ? ' ' : e.key.toLowerCase();
+    if(moveKeys.map(k=>k.toLowerCase()).includes(raw) || raw==='escape'){
+      log('該按鍵已用於移動，或按下了 Esc，已取消設定。');
+    } else {
+      keyBindings[rebindingAction] = raw;
+      saveKeyBindings();
+      log(`已將「${ACTION_LABELS[rebindingAction]}」設定為 ${keyLabel(raw)}。`);
+    }
+    rebindingAction = null;
+    renderKeybindUI();
+    return;
+  }
+  if(moveKeys.includes(e.key)) e.preventDefault();
   keys[e.key.toLowerCase()] = true;
-  if(e.key==='e'||e.key==='E') tryInteract();
-  if(e.key===' ') useBasicAttack();
-  if(['1','2','3','4'].includes(e.key)) useHotbarSlot(parseInt(e.key,10)-1);
+  const action = findActionForKey(e.key);
+  if(action){
+    e.preventDefault();
+    triggerAction(action);
+  }
 });
 window.addEventListener('keyup', e=>{ keys[e.key.toLowerCase()] = false; });
 
@@ -711,6 +775,7 @@ function useBasicAttack(){
   const target = pickTarget(BASIC_RANGE);
   if(!target){ return; }
   basicCdUntil = now + BASIC_CD*1000;
+  playerAttackAnim.start = now;
   const raw = 3 + player.str*0.5 + weaponPower();
   applyPlayerDamage(target, raw, null);
 }
@@ -727,6 +792,7 @@ function useHotbarSlot(idx){
   if(!target){ return; }
   player.qi -= eff.qi;
   skillCd[sid] = now + eff.cd*1000;
+  playerAttackAnim.start = now;
   const raw = (s.dmg(player) + weaponPower()*0.5) * eff.dmgMult;
   applyPlayerDamage(target, raw, sid);
   incrementProficiency(sid);
@@ -738,13 +804,16 @@ function updateEnemyAI(en, dt){
   const distToPlayer = Math.hypot(en.x-player.px, en.y-player.py);
   switch(en.state){
     case 'idle':
+      en.moving = false;
       en.stateTimer -= dt;
       if(distToPlayer < en.kind.aggro){ en.state='chase'; }
       break;
     case 'chase': {
       if(distToPlayer > en.kind.aggro*1.8){ en.state='return'; break; }
-      if(distToPlayer <= en.kind.atkRange){ en.state='windup'; en.stateTimer=0.45; break; }
+      if(distToPlayer <= en.kind.atkRange){ en.state='windup'; en.stateTimer=0.45; en.moving=false; break; }
       const dx=player.px-en.x, dy=player.py-en.y, len=Math.hypot(dx,dy)||1;
+      en.facing = dx<0 ? 'left' : 'right';
+      en.moving = true;
       const nx = en.x + dx/len*en.kind.speed*dt;
       const ny = en.y + dy/len*en.kind.speed*dt;
       if(!enemyBlocked(nx,en.y)) en.x=nx;
@@ -752,6 +821,7 @@ function updateEnemyAI(en, dt){
       break;
     }
     case 'windup':
+      en.moving = false;
       en.stateTimer -= dt;
       if(en.stateTimer<=0){
         const d2 = Math.hypot(en.x-player.px, en.y-player.py);
@@ -772,13 +842,16 @@ function updateEnemyAI(en, dt){
       }
       break;
     case 'cooldown':
+      en.moving = false;
       en.stateTimer -= dt;
       if(en.stateTimer<=0) en.state = distToPlayer<=en.kind.aggro ? 'chase' : 'return';
       break;
     case 'return': {
       const dx=en.spawnX-en.x, dy=en.spawnY-en.y, len=Math.hypot(dx,dy);
-      if(len<4){ en.state='idle'; en.stateTimer=1; break; }
+      if(len<4){ en.state='idle'; en.stateTimer=1; en.moving=false; break; }
       if(distToPlayer < en.kind.aggro*0.8){ en.state='chase'; break; }
+      en.facing = dx<0 ? 'left' : 'right';
+      en.moving = true;
       const nx = en.x + dx/len*en.kind.speed*dt;
       const ny = en.y + dy/len*en.kind.speed*dt;
       if(!enemyBlocked(nx,en.y)) en.x=nx;
@@ -809,6 +882,11 @@ function update(dt){
   if(keys['arrowdown']||keys['s']) vy=1;
   if(keys['arrowleft']||keys['a']) vx=-1;
   if(keys['arrowright']||keys['d']) vx=1;
+  player.walking = (vx!==0 || vy!==0);
+  if(vx<0) player.facing='left';
+  else if(vx>0) player.facing='right';
+  else if(vy<0) player.facing='up';
+  else if(vy>0) player.facing='down';
   if(vx!==0 && vy!==0){ vx*=0.7071; vy*=0.7071; }
 
   const nx = player.px + vx*SPEED*dt;
@@ -824,6 +902,14 @@ function update(dt){
   player.py = Math.max(TILE/2, Math.min(CANVAS_H-TILE/2, player.py));
 
   enemies.forEach(en=>updateEnemyAI(en, dt));
+
+  const inSafeZone = Math.floor(player.px/TILE) < SAFE_ZONE_COL;
+  player.inSafeZone = inSafeZone;
+  const regenMult = inSafeZone ? 2 : 1;
+  const hpRegen = (1.0 + player.con*0.06) * regenMult;
+  const qiRegen = (0.8 + player.int*0.08) * regenMult;
+  player.hp = Math.min(player.maxHp, player.hp + hpRegen*dt);
+  player.qi = Math.min(player.maxQi, player.qi + qiRegen*dt);
 
   floaters.forEach(f=>{ f.y -= (f.big?26:22)*dt; f.life -= dt*(f.big?0.75:0.9); });
   floaters = floaters.filter(f=>f.life>0);
@@ -841,6 +927,12 @@ function update(dt){
 function drawInkFigure(cx, cy, robeColor, opts){
   opts = opts||{};
   const s = TILE/28;
+  const facing = opts.facing || 'down';
+  const flip = facing==='left' ? -1 : 1;
+  const walking = !!opts.walking;
+  const attackT = opts.attackT || 0; // 0..1, 0 = no attack
+  const phase = opts.animTick!==undefined ? opts.animTick : 0;
+
   ctx.save();
   ctx.translate(cx, cy);
   ctx.fillStyle='rgba(0,0,0,.3)';
@@ -848,20 +940,24 @@ function drawInkFigure(cx, cy, robeColor, opts){
   ctx.ellipse(0, 12*s, 8*s, 3*s, 0,0,Math.PI*2);
   ctx.fill();
 
+  const bob = walking ? Math.abs(Math.sin(phase*9))*1.6*s : 0;
+  const legSwing = walking ? Math.sin(phase*9)*3*s : 0;
+  ctx.translate(0, -bob);
+  ctx.scale(flip,1);
+
   ctx.globalAlpha = opts.alpha!==undefined ? opts.alpha : 1;
   ctx.lineJoin='round';
   ctx.strokeStyle='#1c1712';
   ctx.lineWidth=2.4*s;
 
-  // legs (small stubby cartoon legs)
+  // legs (alternate swing while walking)
   ctx.fillStyle='#3a3028';
-  ctx.beginPath(); ctx.roundRect(-6*s,4*s,4.5*s,7*s,2*s); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.roundRect(1.5*s,4*s,4.5*s,7*s,2*s); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(-6*s,4*s+legSwing,4.5*s,7*s,2*s); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(1.5*s,4*s-legSwing,4.5*s,7*s,2*s); ctx.fill(); ctx.stroke();
 
-  // arms
+  // back arm (non-attacking side)
   ctx.fillStyle=robeColor;
   ctx.beginPath(); ctx.roundRect(-11*s,-6*s,4*s,9*s,2*s); ctx.fill(); ctx.stroke();
-  ctx.beginPath(); ctx.roundRect(7*s,-6*s,4*s,9*s,2*s); ctx.fill(); ctx.stroke();
 
   // body (flat color, thick outline)
   if(opts.flash){ ctx.fillStyle='#fff2c0'; } else { ctx.fillStyle=robeColor; }
@@ -877,20 +973,37 @@ function drawInkFigure(cx, cy, robeColor, opts){
   ctx.fill();
   ctx.stroke();
 
-  // hair / headband accent (uses robe color as identity)
-  ctx.fillStyle=robeColor;
-  ctx.beginPath();
-  ctx.arc(0,-16*s,8.5*s,Math.PI*1.08,Math.PI*1.92);
-  ctx.lineTo(8.5*s,-19*s);
-  ctx.lineTo(-8.5*s,-19*s);
-  ctx.closePath();
-  ctx.fill();
-  ctx.stroke();
+  if(facing==='up'){
+    // back of head - hair covers everything, no face
+    ctx.fillStyle=robeColor;
+    ctx.beginPath();
+    ctx.arc(0,-16*s,8.5*s,0,Math.PI*2);
+    ctx.fill();
+    ctx.stroke();
+  } else {
+    // hair / headband accent
+    ctx.fillStyle=robeColor;
+    ctx.beginPath();
+    ctx.arc(0,-16*s,8.5*s,Math.PI*1.08,Math.PI*1.92);
+    ctx.lineTo(8.5*s,-19*s);
+    ctx.lineTo(-8.5*s,-19*s);
+    ctx.closePath();
+    ctx.fill();
+    ctx.stroke();
+    // eyes
+    ctx.fillStyle='#1c1712';
+    ctx.beginPath(); ctx.arc(-3*s,-15*s,1.3*s,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(3*s,-15*s,1.3*s,0,Math.PI*2); ctx.fill();
+  }
 
-  // eyes
-  ctx.fillStyle='#1c1712';
-  ctx.beginPath(); ctx.arc(-3*s,-15*s,1.3*s,0,Math.PI*2); ctx.fill();
-  ctx.beginPath(); ctx.arc(3*s,-15*s,1.3*s,0,Math.PI*2); ctx.fill();
+  // front arm - swings forward when attacking
+  ctx.save();
+  const swing = attackT>0 ? Math.sin(Math.min(1,attackT)*Math.PI) : 0;
+  ctx.translate(9*s,-4*s);
+  ctx.rotate(-swing*1.3);
+  ctx.fillStyle= swing>0.5 ? '#fff2c0' : robeColor;
+  ctx.beginPath(); ctx.roundRect(-2*s,-2*s,4*s,9*s+swing*4*s,2*s); ctx.fill(); ctx.stroke();
+  ctx.restore();
 
   ctx.restore();
 }
@@ -922,7 +1035,7 @@ function render(){
 
   NPCS.forEach(n=>{
     const cx = n.x*TILE+TILE/2, cy = n.y*TILE+TILE/2;
-    drawInkFigure(cx, cy, n.color);
+    drawInkFigure(cx, cy, n.color, {facing:'down'});
     ctx.font='11px "Noto Serif TC", serif';
     const w = ctx.measureText(n.name).width;
     ctx.fillStyle='rgba(40,30,20,.55)';
@@ -933,7 +1046,8 @@ function render(){
 
   enemies.forEach(en=>{
     const flash = en.state==='windup';
-    drawInkFigure(en.x, en.y, en.color, {flash});
+    const chargeT = en.state==='windup' ? Math.max(0, 1-(en.stateTimer/0.45)) : 0;
+    drawInkFigure(en.x, en.y, en.color, {flash, facing:en.facing||'right', walking:!!en.moving, animTick:animTick+en.uid, attackT:chargeT});
     const bw=34, bh=5;
     ctx.fillStyle='rgba(0,0,0,.5)';
     ctx.fillRect(en.x-bw/2, en.y-30, bw, bh);
@@ -954,7 +1068,8 @@ function render(){
   const now = performance.now();
   const invuln = now < invulnerableUntil;
   const alpha = invuln ? (Math.floor(now/80)%2===0 ? 0.4:1) : 1;
-  drawInkFigure(player.px, player.py, '#a3352c', {alpha});
+  const playerAttackT = (now - playerAttackAnim.start) < playerAttackAnim.duration ? (now-playerAttackAnim.start)/playerAttackAnim.duration : 0;
+  drawInkFigure(player.px, player.py, '#a3352c', {alpha, facing:player.facing||'down', walking:!!player.walking, animTick:animTick, attackT:playerAttackT});
 
   const n = nearbyNPC();
   if(n && !inputLocked){
@@ -1123,12 +1238,16 @@ function buildHotbarDOM(){
     const box = document.createElement('div');
     box.className='slot empty';
     box.dataset.idx = i;
-    box.innerHTML = `<span class="key">${i+1}</span><span class="label">空</span><div class="cd" style="height:0"></div>`;
+    box.style.cursor='pointer';
+    box.innerHTML = `<span class="key">${keyLabel(keyBindings['skill'+(i+1)])}</span><span class="label">空</span><div class="cd" style="height:0"></div>`;
+    box.onclick = ()=>useHotbarSlot(i);
     hotbarEl.appendChild(box);
   }
   const basic = document.createElement('div');
   basic.className='slot basic';
-  basic.innerHTML = `<span class="key">␣</span><span class="label">基本攻擊</span><div class="cd" style="height:0"></div>`;
+  basic.style.cursor='pointer';
+  basic.innerHTML = `<span class="key">${keyLabel(keyBindings.basic)}</span><span class="label">基本攻擊</span><div class="cd" style="height:0"></div>`;
+  basic.onclick = ()=>useBasicAttack();
   hotbarEl.appendChild(basic);
 }
 buildHotbarDOM();
@@ -1138,6 +1257,7 @@ function updateHotbarUI(){
   for(let i=0;i<4;i++){
     const sid = player.hotbar[i];
     const box = boxes[i];
+    box.querySelector('.key').textContent = keyLabel(keyBindings['skill'+(i+1)]);
     if(!sid){ box.className='slot empty'; box.querySelector('.label').textContent='空'; box.querySelector('.cd').style.height='0'; continue; }
     const s = SKILLS[sid];
     const eff = effectiveSkillStats(sid);
@@ -1154,6 +1274,7 @@ function updateHotbarUI(){
     cdEl.textContent = pct>0 ? Math.ceil(remain/1000) : '';
   }
   const basicBox = boxes[4];
+  basicBox.querySelector('.key').textContent = keyLabel(keyBindings.basic);
   const remain = Math.max(0, basicCdUntil-now);
   const pct = Math.min(1, remain/(BASIC_CD*1000));
   basicBox.querySelector('.cd').style.height=(pct*100)+'%';
@@ -1236,21 +1357,25 @@ function refreshSidebar(){
     if(!meta) return;
     const row = document.createElement('div');
     row.className='inv-item';
-    row.innerHTML = `<span>${meta.name} x${count}</span>`;
+    row.innerHTML = `<span>${meta.name} x${count}<span class="small-note" style="display:block;">${meta.desc}</span></span>`;
     const useBtn = document.createElement('button');
     useBtn.textContent='使用';
-    useBtn.onclick = ()=>{
-      if(inputLocked) return;
-      if(meta.type==='hp') player.hp = Math.min(player.maxHp, player.hp+meta.amount);
-      else player.qi = Math.min(player.maxQi, player.qi+meta.amount);
-      player.inventory[id]-=1;
-      log(`你使用了${meta.name}。`);
-      refreshSidebar();
-      updateHUD();
-    };
+    useBtn.onclick = ()=>useItem(id);
     row.appendChild(useBtn);
     invList.appendChild(row);
   });
+  updateHUD();
+}
+function useItem(id){
+  if(inputLocked) return;
+  const meta = POTIONS.find(p=>p.id===id);
+  if(!meta) return;
+  if((player.inventory[id]||0)<=0){ log(`沒有${meta.name}了。`); return; }
+  if(meta.type==='hp') player.hp = Math.min(player.maxHp, player.hp+meta.amount);
+  else player.qi = Math.min(player.maxQi, player.qi+meta.amount);
+  player.inventory[id]-=1;
+  log(`你使用了${meta.name}。`);
+  refreshSidebar();
   updateHUD();
 }
 
@@ -1261,6 +1386,7 @@ function updateHUD(){
   document.getElementById('hudQiBar').style.width = (player.qi/player.maxQi*100)+'%';
   document.getElementById('hudQiText').textContent = `${Math.ceil(player.qi)}/${player.maxQi}`;
   document.getElementById('hudSilver').textContent = player.silver;
+  document.getElementById('hudZone').style.display = player.inSafeZone ? 'flex' : 'none';
 }
 
 // ---------- Save / Load ----------
@@ -1309,6 +1435,32 @@ document.getElementById('btnNew').onclick = ()=>{
   }
 };
 
+// ---------- Keybind UI ----------
+const keybindOverlay = document.getElementById('keybindOverlay');
+const keybindList = document.getElementById('keybindList');
+function renderKeybindUI(){
+  keybindList.innerHTML='';
+  Object.keys(ACTION_LABELS).forEach(action=>{
+    const row = document.createElement('div');
+    row.className='inv-item';
+    const waiting = rebindingAction===action;
+    row.innerHTML = `<span>${ACTION_LABELS[action]}</span>`;
+    const btn = document.createElement('button');
+    btn.textContent = waiting ? '請按下按鍵…' : keyLabel(keyBindings[action]);
+    btn.onclick = ()=>{ rebindingAction = action; renderKeybindUI(); };
+    row.appendChild(btn);
+    keybindList.appendChild(row);
+  });
+}
+document.getElementById('btnKeybind').onclick = ()=>{
+  renderKeybindUI();
+  keybindOverlay.classList.add('show');
+};
+document.getElementById('keybindClose').onclick = ()=>{
+  rebindingAction = null;
+  keybindOverlay.classList.remove('show');
+};
+
 // ---------- Start overlay ----------
 const startOverlay = document.getElementById('startOverlay');
 document.getElementById('btnStartNew').onclick = ()=>{
@@ -1326,6 +1478,7 @@ document.getElementById('btnStartLoad').onclick = async ()=>{
 // ---------- Init ----------
 inputLocked = true;
 refreshSidebar();
+loadKeyBindings();
 requestAnimationFrame((t)=>{ lastTime=t; requestAnimationFrame(loop); });
 
 })();
