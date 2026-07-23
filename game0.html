@@ -157,6 +157,12 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 #startOverlay p{color:var(--ink-soft);line-height:1.9;font-size:14px;}
 .deathflash{position:fixed;inset:0;background:radial-gradient(ellipse at center, rgba(160,30,20,0) 40%, rgba(120,20,15,.55) 100%);pointer-events:none;opacity:0;transition:opacity .25s;z-index:40;}
 .deathflash.show{opacity:1;}
+.skill-level-row{display:flex;align-items:center;gap:6px;margin-top:3px;}
+.skill-level-row .lv{font-size:11px;color:var(--seal-dark);font-weight:700;}
+.prof-outer{flex:1;height:6px;background:#00000022;border:1px solid var(--ink-faint);border-radius:2px;overflow:hidden;}
+.prof-inner{height:100%;background:linear-gradient(#d8b355,#a3352c);}
+.upgrade-btn{display:block;width:100%;text-align:left;margin-bottom:8px;padding:10px 12px;}
+.upgrade-btn .desc{display:block;font-size:11px;color:var(--ink-faint);margin-top:2px;}
 .footer-credit{color:var(--ink-faint);font-size:11px;margin-top:18px;}
 ::-webkit-scrollbar{width:8px;}
 ::-webkit-scrollbar-thumb{background:var(--gold);}
@@ -232,6 +238,15 @@ button:disabled{opacity:.4;cursor:not-allowed;}
   </div>
 </div>
 
+<!-- SKILL LEVEL UP OVERLAY -->
+<div class="overlay" id="skillUpOverlay">
+  <div class="modal">
+    <h2 id="skillUpName">武學精進</h2>
+    <div class="npc-line" id="skillUpText"></div>
+    <div id="skillUpChoices"></div>
+  </div>
+</div>
+
 <script>
 (function(){
 
@@ -280,83 +295,87 @@ function tileBlocked(px,py){
   const t = grid[r][c];
   return t==='T' || t==='~' || t==='#';
 }
+const SAFE_ZONE_COL = 10; // village (col < this) is a safe zone; enemies cannot enter
+function enemyBlocked(px,py){
+  if(tileBlocked(px,py)) return true;
+  return Math.floor(px/TILE) < SAFE_ZONE_COL;
+}
 
-// ---------- Ink-wash background (baked once) ----------
+// ---------- Cartoon "Little Fighter" style background (baked once) ----------
 const bgCanvas = document.createElement('canvas');
 bgCanvas.width = CANVAS_W; bgCanvas.height = CANVAS_H;
 const bctx = bgCanvas.getContext('2d');
 function seededRand(seed){ let x = Math.sin(seed)*10000; return x-Math.floor(x); }
 
-function paintInkTile(c,r){
+function paintTile(c,r){
   const x=c*TILE, y=r*TILE, cx=x+TILE/2, cy=y+TILE/2;
   const t = grid[r][c];
   const seed = c*137.3 + r*911.7;
+  bctx.lineWidth = 1;
   if(t==='.'){
-    bctx.fillStyle = '#cdbd90';
+    bctx.fillStyle = (c+r)%2===0 ? '#e8c988' : '#e2c17e';
     bctx.fillRect(x,y,TILE,TILE);
-    bctx.fillStyle = 'rgba(120,100,60,0.10)';
-    bctx.beginPath();
-    bctx.ellipse(cx + (seededRand(seed)-0.5)*8, cy+(seededRand(seed+1)-0.5)*8, TILE*0.5, TILE*0.28, seededRand(seed+2)*3, 0, Math.PI*2);
-    bctx.fill();
+    bctx.strokeStyle='rgba(140,100,40,0.25)';
+    bctx.strokeRect(x+0.5,y+0.5,TILE-1,TILE-1);
   } else if(t===','){
-    bctx.fillStyle = (c+r)%2===0 ? '#9fae82' : '#96a578';
+    bctx.fillStyle = (c+r)%2===0 ? '#7bc25c' : '#72b852';
     bctx.fillRect(x,y,TILE,TILE);
-    bctx.strokeStyle='rgba(70,80,45,0.18)';
-    bctx.lineWidth=1.3;
-    for(let i=0;i<2;i++){
-      const bx = x+4+seededRand(seed+i)*TILE*0.7;
-      const by = y+TILE-4-seededRand(seed+i+3)*6;
-      bctx.beginPath();
-      bctx.moveTo(bx,by);
-      bctx.quadraticCurveTo(bx+2, by-8, bx+ (seededRand(seed+i+5)-0.5)*6, by-14);
-      bctx.stroke();
-    }
+    bctx.fillStyle='rgba(255,255,255,0.12)';
+    bctx.beginPath(); bctx.arc(x+7,y+7,3,0,Math.PI*2); bctx.fill();
+    bctx.fillStyle='rgba(0,60,0,0.10)';
+    bctx.beginPath(); bctx.arc(x+TILE-8,y+TILE-8,4,0,Math.PI*2); bctx.fill();
   } else if(t==='T'){
-    bctx.fillStyle = (c+r)%2===0 ? '#9fae82' : '#96a578';
+    bctx.fillStyle = (c+r)%2===0 ? '#7bc25c' : '#72b852';
     bctx.fillRect(x,y,TILE,TILE);
-    bctx.fillStyle = '#5a4630';
-    bctx.fillRect(cx-2, cy+2, 4, 10);
-    bctx.save();
-    bctx.shadowColor='rgba(40,55,35,0.5)';
-    bctx.shadowBlur=6;
-    bctx.fillStyle='rgba(60,80,55,0.85)';
+    bctx.fillStyle='#7a4a26';
+    bctx.strokeStyle='#2c1c10'; bctx.lineWidth=2;
+    bctx.fillRect(cx-3,cy+1,6,11);
+    bctx.strokeRect(cx-3,cy+1,6,11);
     bctx.beginPath();
-    bctx.arc(cx, cy-4, TILE*0.46, 0, Math.PI*2);
+    bctx.arc(cx, cy-6, TILE*0.46, 0, Math.PI*2);
+    bctx.fillStyle='#3a9a44';
     bctx.fill();
-    bctx.fillStyle='rgba(90,110,75,0.55)';
-    bctx.beginPath();
-    bctx.arc(cx-5, cy-9, TILE*0.28, 0, Math.PI*2);
-    bctx.fill();
-    bctx.restore();
+    bctx.strokeStyle='#1f5c26'; bctx.lineWidth=2.2;
+    bctx.stroke();
+    bctx.fillStyle='#57c25f';
+    bctx.beginPath(); bctx.arc(cx-6,cy-11,TILE*0.2,0,Math.PI*2); bctx.fill();
   } else if(t==='~'){
-    bctx.fillStyle = '#7f9aa3';
+    bctx.fillStyle = '#4fb3d9';
     bctx.fillRect(x,y,TILE,TILE);
-    bctx.strokeStyle='rgba(255,255,255,0.25)';
-    bctx.lineWidth=1;
+    bctx.strokeStyle='rgba(255,255,255,0.55)';
+    bctx.lineWidth=2;
     bctx.beginPath();
     bctx.moveTo(x+2, cy+ (seededRand(seed)-0.5)*6);
-    bctx.quadraticCurveTo(cx, cy-4, x+TILE-2, cy+(seededRand(seed+1)-0.5)*6);
+    bctx.quadraticCurveTo(cx, cy-5, x+TILE-2, cy+(seededRand(seed+1)-0.5)*6);
     bctx.stroke();
   } else if(t==='#'){
-    bctx.fillStyle = '#9fae82';
+    bctx.fillStyle = '#7bc25c';
     bctx.fillRect(x,y,TILE,TILE);
-    bctx.save();
-    bctx.shadowColor='rgba(0,0,0,0.35)';
-    bctx.shadowBlur=4;
-    bctx.fillStyle='#c7b48c';
-    bctx.fillRect(x+2,y+8,TILE-4,TILE-10);
-    bctx.fillStyle='#8c3730';
+    bctx.strokeStyle='#1f2418'; bctx.lineWidth=2;
+    bctx.fillStyle='#f2e2b8';
+    bctx.fillRect(x+2,y+9,TILE-4,TILE-11);
+    bctx.strokeRect(x+2,y+9,TILE-4,TILE-11);
+    bctx.fillStyle='#d94b3e';
     bctx.beginPath();
-    bctx.moveTo(x, y+9);
-    bctx.lineTo(x+TILE/2, y-1);
-    bctx.lineTo(x+TILE, y+9);
+    bctx.moveTo(x-1, y+10);
+    bctx.lineTo(x+TILE/2, y-2);
+    bctx.lineTo(x+TILE+1, y+10);
     bctx.closePath();
     bctx.fill();
-    bctx.restore();
+    bctx.stroke();
+    bctx.fillStyle='#8a5a2c';
+    bctx.fillRect(cx-3, y+TILE-9, 6, 9);
+  }
+  // safe-zone fence marking the village border
+  if(c===SAFE_ZONE_COL-1 && t!=='T' && t!=='#'){
+    bctx.strokeStyle='#8a5a2c'; bctx.lineWidth=3;
+    bctx.beginPath(); bctx.moveTo(x+TILE-1,y); bctx.lineTo(x+TILE-1,y+TILE); bctx.stroke();
+    bctx.fillStyle='#a3352c';
+    bctx.beginPath(); bctx.arc(x+TILE-1, y+TILE/2, 3, 0, Math.PI*2); bctx.fill();
   }
 }
 function bakeBackground(){
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) paintInkTile(c,r);
+  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) paintTile(c,r);
 }
 bakeBackground();
 
@@ -432,6 +451,7 @@ function freshPlayer(){
     hp:0, maxHp:0, qi:0, maxQi:0,
     silver:60,
     learnedSkills:[],
+    skillLevels:{},
     hotbar:[null,null,null,null],
     inventory:{ hp_potion:1, qi_potion:1 },
     weapon:null, armor:null,
@@ -452,6 +472,66 @@ function recalcDerived(p, fillFull){
 function weaponPower(){ return player.weapon ? player.weapon.power : 0; }
 function armorDef(){ return player.armor ? player.armor.def : 0; }
 
+// ---------- Skill proficiency / leveling ----------
+function ensureSkillLevel(sid){
+  if(!player.skillLevels[sid]){
+    player.skillLevels[sid] = {level:1, prof:0, profNeeded:5, dmgMult:0, rangeBonus:0, qiReduct:0, cdReduct:0};
+  }
+  return player.skillLevels[sid];
+}
+function effectiveSkillStats(sid){
+  const s = SKILLS[sid];
+  const m = ensureSkillLevel(sid);
+  return {
+    qi: Math.max(1, s.qi - m.qiReduct),
+    cd: Math.max(1.0, s.cd - m.cdReduct),
+    range: s.range + m.rangeBonus,
+    dmgMult: 1 + m.dmgMult,
+  };
+}
+let pendingSkillUp = null;
+function incrementProficiency(sid){
+  const m = ensureSkillLevel(sid);
+  m.prof += 1;
+  if(m.prof >= m.profNeeded){
+    m.prof = 0;
+    pendingSkillUp = sid;
+    openSkillUpModal(sid);
+  }
+}
+function openSkillUpModal(sid){
+  inputLocked = true;
+  const s = SKILLS[sid];
+  const m = ensureSkillLevel(sid);
+  document.getElementById('skillUpOverlay').classList.add('show');
+  document.getElementById('skillUpName').textContent = `武學精進 · ${s.name}`;
+  document.getElementById('skillUpText').textContent = `熟能生巧！「${s.name}」即將由 Lv.${m.level} 提升至 Lv.${m.level+1}，請選擇強化方向：`;
+  const box = document.getElementById('skillUpChoices');
+  box.innerHTML='';
+  const options = [
+    {key:'dmgMult', label:'加深招式威力', desc:'傷害 +15%', apply:()=>{ m.dmgMult += 0.15; }},
+    {key:'rangeBonus', label:'拓展出手距離', desc:'攻擊距離 +8', apply:()=>{ m.rangeBonus += 8; }},
+    {key:'qiReduct', label:'凝練內力運使', desc:'內力消耗 -1（下限1）', apply:()=>{ m.qiReduct += 1; }},
+    {key:'cdReduct', label:'加快招式節奏', desc:'冷卻時間 -0.4秒（下限1秒）', apply:()=>{ m.cdReduct += 0.4; }},
+  ];
+  options.forEach(opt=>{
+    const b = document.createElement('button');
+    b.className='upgrade-btn';
+    b.innerHTML = `${opt.label}<span class="desc">${opt.desc}</span>`;
+    b.onclick = ()=>{
+      opt.apply();
+      m.level += 1;
+      m.profNeeded = 5 + (m.level-1)*4;
+      log(`「${s.name}」精進至 Lv.${m.level}！`);
+      document.getElementById('skillUpOverlay').classList.remove('show');
+      pendingSkillUp = null;
+      inputLocked = false;
+      refreshSidebar();
+    };
+    box.appendChild(b);
+  });
+}
+
 // ---------- Runtime combat state (not persisted) ----------
 let enemies = [];
 let nextUid = 1;
@@ -462,13 +542,16 @@ let invulnerableUntil = 0;
 let lastHitFlash = 0;
 let combo = {lastSkill:null, stacks:0, expireAt:0};
 let floaters = [];      // floating damage/text popups
+let particles = [];     // hit-spark particles
+let screenShake = {time:0, mag:0};
+let hitStopUntil = 0;
 
 function spawnEnemy(){
   if(enemies.length >= 5 || spawnTiles.length===0) return;
   const def = pickEnemyDef();
   const pos = spawnTiles[Math.floor(Math.random()*spawnTiles.length)];
   enemies.push({
-    uid: nextUid++, def,
+    uid: nextUid++, kind:def,
     name:def.name, color:def.color,
     hp:def.hp, maxHp:def.hp,
     x:pos.x, y:pos.y, spawnX:pos.x, spawnY:pos.y,
@@ -491,8 +574,26 @@ function log(msg){
   logBox.scrollTop = logBox.scrollHeight;
   while(logBox.children.length>60) logBox.removeChild(logBox.firstChild);
 }
-function popFloater(x,y,text,color){
-  floaters.push({x,y,text,color:color||'#c14a3e', life:1.0});
+function popFloater(x,y,text,color,big){
+  floaters.push({x,y,text,color:color||'#c14a3e', life:1.0, big:!!big});
+}
+function spawnHitParticles(x,y,color,count){
+  count = count||8;
+  for(let i=0;i<count;i++){
+    const ang = Math.random()*Math.PI*2;
+    const spd = 60+Math.random()*120;
+    particles.push({
+      x,y, vx:Math.cos(ang)*spd, vy:Math.sin(ang)*spd,
+      life:1.0, decay:2.4+Math.random()*1.5, color, size:2+Math.random()*2.2,
+    });
+  }
+}
+function triggerImpact(x,y,opts){
+  opts = opts||{};
+  spawnHitParticles(x,y, opts.color||'#f0d78a', opts.particles||8);
+  screenShake.time = opts.shakeTime!==undefined ? opts.shakeTime : 0.12;
+  screenShake.mag = opts.shakeMag!==undefined ? opts.shakeMag : 3;
+  if(opts.hitStop) hitStopUntil = performance.now() + opts.hitStop;
 }
 
 // ---------- Input ----------
@@ -557,19 +658,32 @@ function applyPlayerDamage(target, rawDmg, comboKey){
     combo.lastSkill = null; combo.stacks = 0;
   }
   const mult = 1 + combo.stacks*0.12;
-  const dmg = Math.max(1, Math.round((rawDmg - target.def) * mult));
+  const dmg = Math.max(1, Math.round((rawDmg - target.kind.def) * mult));
   target.hp -= dmg;
-  popFloater(target.x, target.y-18, (comboKey?'':'')+dmg + (combo.stacks>0?` x${combo.stacks+1}`:''), '#c14a3e');
+  const isSkill = !!comboKey;
+  popFloater(target.x, target.y-18, dmg + (combo.stacks>0?` x${combo.stacks+1}`:''), isSkill?'#e8b23a':'#f0e0c0', isSkill);
+  triggerImpact(target.x, target.y-6, {
+    color: isSkill ? '#ffe9a8' : '#f0e0c0',
+    particles: isSkill ? 12 : 7,
+    shakeTime: isSkill ? 0.16 : 0.08,
+    shakeMag: isSkill ? 6 : 3,
+    hitStop: isSkill ? 70 : 40,
+  });
+  const dx = target.x-player.px, dy = target.y-player.py, len=Math.hypot(dx,dy)||1;
+  const kb = isSkill ? 14 : 8;
+  const nx = target.x + dx/len*kb, ny = target.y + dy/len*kb;
+  if(!tileBlocked(nx, target.y)) target.x = nx;
+  if(!tileBlocked(target.x, ny)) target.y = ny;
   if(target.hp<=0) killEnemy(target);
 }
 
 function killEnemy(target){
   enemies = enemies.filter(e=>e.uid!==target.uid);
   if(focusTarget===target.uid) focusTarget=null;
-  player.xp += target.def.xp;
-  player.silver += target.def.silver;
-  popFloater(target.x, target.y-30, `+${target.def.xp}經驗 +${target.def.silver}銀`, '#b08d43');
-  log(`你擊敗了${target.name}，獲得經驗 ${target.def.xp}、銀兩 ${target.def.silver}。`);
+  player.xp += target.kind.xp;
+  player.silver += target.kind.silver;
+  popFloater(target.x, target.y-30, `+${target.kind.xp}經驗 +${target.kind.silver}銀`, '#b08d43');
+  log(`你擊敗了${target.name}，獲得經驗 ${target.kind.xp}、銀兩 ${target.kind.silver}。`);
   if(Math.random()<0.3){
     const pot = Math.random()<0.5?'hp_potion':'qi_potion';
     player.inventory[pot] = (player.inventory[pot]||0)+1;
@@ -605,15 +719,17 @@ function useHotbarSlot(idx){
   const sid = player.hotbar[idx];
   if(!sid) return;
   const s = SKILLS[sid];
+  const eff = effectiveSkillStats(sid);
   const now = performance.now();
   if((skillCd[sid]||0) > now) return;
-  if(player.qi < s.qi) { log('內力不足！'); return; }
-  const target = pickTarget(s.range);
+  if(player.qi < eff.qi) { log('內力不足！'); return; }
+  const target = pickTarget(eff.range);
   if(!target){ return; }
-  player.qi -= s.qi;
-  skillCd[sid] = now + s.cd*1000;
-  const raw = s.dmg(player) + weaponPower()*0.5;
+  player.qi -= eff.qi;
+  skillCd[sid] = now + eff.cd*1000;
+  const raw = (s.dmg(player) + weaponPower()*0.5) * eff.dmgMult;
   applyPlayerDamage(target, raw, sid);
+  incrementProficiency(sid);
   updateHUD();
 }
 
@@ -623,32 +739,33 @@ function updateEnemyAI(en, dt){
   switch(en.state){
     case 'idle':
       en.stateTimer -= dt;
-      if(distToPlayer < en.def.aggro){ en.state='chase'; }
+      if(distToPlayer < en.kind.aggro){ en.state='chase'; }
       break;
     case 'chase': {
-      if(distToPlayer > en.def.aggro*1.8){ en.state='return'; break; }
-      if(distToPlayer <= en.def.atkRange){ en.state='windup'; en.stateTimer=0.45; break; }
+      if(distToPlayer > en.kind.aggro*1.8){ en.state='return'; break; }
+      if(distToPlayer <= en.kind.atkRange){ en.state='windup'; en.stateTimer=0.45; break; }
       const dx=player.px-en.x, dy=player.py-en.y, len=Math.hypot(dx,dy)||1;
-      const nx = en.x + dx/len*en.def.speed*dt;
-      const ny = en.y + dy/len*en.def.speed*dt;
-      if(!tileBlocked(nx,en.y)) en.x=nx;
-      if(!tileBlocked(en.x,ny)) en.y=ny;
+      const nx = en.x + dx/len*en.kind.speed*dt;
+      const ny = en.y + dy/len*en.kind.speed*dt;
+      if(!enemyBlocked(nx,en.y)) en.x=nx;
+      if(!enemyBlocked(en.x,ny)) en.y=ny;
       break;
     }
     case 'windup':
       en.stateTimer -= dt;
       if(en.stateTimer<=0){
         const d2 = Math.hypot(en.x-player.px, en.y-player.py);
-        if(d2 <= en.def.atkRange*1.3 && now>=invulnerableUntil){
-          const raw = en.def.atk + Math.random()*4;
+        if(d2 <= en.kind.atkRange*1.3 && now>=invulnerableUntil){
+          const raw = en.kind.atk + Math.random()*4;
           const dmg = Math.max(1, Math.round(raw - armorDef() - player.con*0.2));
           player.hp -= dmg;
           invulnerableUntil = now+300;
           lastHitFlash = now;
-          popFloater(player.px, player.py-18, '-'+dmg, '#e2564a');
+          popFloater(player.px, player.py-18, '-'+dmg, '#e2564a', true);
+          triggerImpact(player.px, player.py-6, {color:'#e2564a', particles:9, shakeTime:0.18, shakeMag:7});
           log(`${en.name}擊中了你，造成 ${dmg} 傷害。`);
           if(player.hp<=0) onPlayerDown();
-        } else if(d2 <= en.def.atkRange*1.3){
+        } else if(d2 <= en.kind.atkRange*1.3){
           popFloater(player.px, player.py-18, '閃避', '#4f7d6c');
         }
         en.state='cooldown'; en.stateTimer=0.9;
@@ -656,16 +773,16 @@ function updateEnemyAI(en, dt){
       break;
     case 'cooldown':
       en.stateTimer -= dt;
-      if(en.stateTimer<=0) en.state = distToPlayer<=en.def.aggro ? 'chase' : 'return';
+      if(en.stateTimer<=0) en.state = distToPlayer<=en.kind.aggro ? 'chase' : 'return';
       break;
     case 'return': {
       const dx=en.spawnX-en.x, dy=en.spawnY-en.y, len=Math.hypot(dx,dy);
       if(len<4){ en.state='idle'; en.stateTimer=1; break; }
-      if(distToPlayer < en.def.aggro*0.8){ en.state='chase'; break; }
-      const nx = en.x + dx/len*en.def.speed*dt;
-      const ny = en.y + dy/len*en.def.speed*dt;
-      if(!tileBlocked(nx,en.y)) en.x=nx;
-      if(!tileBlocked(en.x,ny)) en.y=ny;
+      if(distToPlayer < en.kind.aggro*0.8){ en.state='chase'; break; }
+      const nx = en.x + dx/len*en.kind.speed*dt;
+      const ny = en.y + dy/len*en.kind.speed*dt;
+      if(!enemyBlocked(nx,en.y)) en.x=nx;
+      if(!enemyBlocked(en.x,ny)) en.y=ny;
       break;
     }
   }
@@ -708,8 +825,12 @@ function update(dt){
 
   enemies.forEach(en=>updateEnemyAI(en, dt));
 
-  floaters.forEach(f=>{ f.y -= 22*dt; f.life -= dt*0.9; });
+  floaters.forEach(f=>{ f.y -= (f.big?26:22)*dt; f.life -= dt*(f.big?0.75:0.9); });
   floaters = floaters.filter(f=>f.life>0);
+
+  particles.forEach(p=>{ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vx*=0.9; p.vy*=0.9; p.life-=p.decay*dt; });
+  particles = particles.filter(p=>p.life>0);
+  if(screenShake.time>0) screenShake.time = Math.max(0, screenShake.time-dt);
 
   if(player.hp<=0) onPlayerDown();
   updateHotbarUI();
@@ -722,36 +843,55 @@ function drawInkFigure(cx, cy, robeColor, opts){
   const s = TILE/28;
   ctx.save();
   ctx.translate(cx, cy);
-  ctx.fillStyle='rgba(0,0,0,.28)';
+  ctx.fillStyle='rgba(0,0,0,.3)';
   ctx.beginPath();
-  ctx.ellipse(0, 11*s, 9*s, 3*s, 0,0,Math.PI*2);
+  ctx.ellipse(0, 12*s, 8*s, 3*s, 0,0,Math.PI*2);
   ctx.fill();
-  if(opts.flash){
-    ctx.shadowColor='#ffdca0'; ctx.shadowBlur=14;
-  } else {
-    ctx.shadowColor='rgba(30,25,20,.4)'; ctx.shadowBlur=4;
-  }
+
   ctx.globalAlpha = opts.alpha!==undefined ? opts.alpha : 1;
-  const grad = ctx.createLinearGradient(0,-10*s,0,9*s);
-  grad.addColorStop(0, lighten(robeColor,12));
-  grad.addColorStop(1, robeColor);
-  ctx.fillStyle=grad;
+  ctx.lineJoin='round';
+  ctx.strokeStyle='#1c1712';
+  ctx.lineWidth=2.4*s;
+
+  // legs (small stubby cartoon legs)
+  ctx.fillStyle='#3a3028';
+  ctx.beginPath(); ctx.roundRect(-6*s,4*s,4.5*s,7*s,2*s); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(1.5*s,4*s,4.5*s,7*s,2*s); ctx.fill(); ctx.stroke();
+
+  // arms
+  ctx.fillStyle=robeColor;
+  ctx.beginPath(); ctx.roundRect(-11*s,-6*s,4*s,9*s,2*s); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(7*s,-6*s,4*s,9*s,2*s); ctx.fill(); ctx.stroke();
+
+  // body (flat color, thick outline)
+  if(opts.flash){ ctx.fillStyle='#fff2c0'; } else { ctx.fillStyle=robeColor; }
   ctx.beginPath();
-  ctx.moveTo(-8*s,9*s);
-  ctx.quadraticCurveTo(-9*s,-3*s,-4*s,-9*s);
-  ctx.quadraticCurveTo(0,-12*s,4*s,-9*s);
-  ctx.quadraticCurveTo(9*s,-3*s,8*s,9*s);
+  ctx.roundRect(-8*s,-8*s,16*s,15*s,4*s);
+  ctx.fill();
+  ctx.stroke();
+
+  // big chibi head
+  ctx.fillStyle='#ffd9a6';
+  ctx.beginPath();
+  ctx.arc(0,-16*s,8.5*s,0,Math.PI*2);
+  ctx.fill();
+  ctx.stroke();
+
+  // hair / headband accent (uses robe color as identity)
+  ctx.fillStyle=robeColor;
+  ctx.beginPath();
+  ctx.arc(0,-16*s,8.5*s,Math.PI*1.08,Math.PI*1.92);
+  ctx.lineTo(8.5*s,-19*s);
+  ctx.lineTo(-8.5*s,-19*s);
   ctx.closePath();
   ctx.fill();
-  ctx.shadowBlur=0;
-  ctx.fillStyle='#ecd4a8';
-  ctx.beginPath();
-  ctx.arc(0,-13*s,5*s,0,Math.PI*2);
-  ctx.fill();
-  ctx.fillStyle='#241d16';
-  ctx.beginPath();
-  ctx.arc(0,-17*s,2.4*s,0,Math.PI*2);
-  ctx.fill();
+  ctx.stroke();
+
+  // eyes
+  ctx.fillStyle='#1c1712';
+  ctx.beginPath(); ctx.arc(-3*s,-15*s,1.3*s,0,Math.PI*2); ctx.fill();
+  ctx.beginPath(); ctx.arc(3*s,-15*s,1.3*s,0,Math.PI*2); ctx.fill();
+
   ctx.restore();
 }
 function lighten(hex, amt){
@@ -773,6 +913,11 @@ function nearbyNPC(){
 
 function render(){
   ctx.clearRect(0,0,CANVAS_W,CANVAS_H);
+  ctx.save();
+  if(screenShake.time>0){
+    const s = screenShake.mag * (screenShake.time/0.18);
+    ctx.translate((Math.random()-0.5)*s, (Math.random()-0.5)*s);
+  }
   ctx.drawImage(bgCanvas,0,0);
 
   NPCS.forEach(n=>{
@@ -823,19 +968,41 @@ function render(){
     ctx.fillText(t, player.px-w/2, player.py+28);
   }
 
-  floaters.forEach(f=>{
-    ctx.globalAlpha = Math.max(0,f.life);
-    ctx.font='bold 13px "Noto Serif TC", serif';
-    ctx.fillStyle=f.color;
-    ctx.fillText(f.text, f.x-ctx.measureText(f.text).width/2, f.y);
+  particles.forEach(p=>{
+    ctx.globalAlpha = Math.max(0,p.life);
+    ctx.fillStyle = p.color;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, p.size, 0, Math.PI*2);
+    ctx.fill();
     ctx.globalAlpha=1;
   });
+
+  floaters.forEach(f=>{
+    ctx.globalAlpha = Math.max(0,f.life);
+    const elapsed = 1-f.life;
+    const pop = elapsed<0.12 ? 1 + (0.12-elapsed)/0.12*0.6 : 1;
+    const size = (f.big ? 20 : 13) * pop;
+    ctx.font = `900 ${size}px "Noto Serif TC", sans-serif`;
+    const tw = ctx.measureText(f.text).width;
+    ctx.lineWidth = f.big ? 3.5 : 2.5;
+    ctx.strokeStyle='rgba(30,20,10,.85)';
+    ctx.strokeText(f.text, f.x-tw/2, f.y);
+    ctx.fillStyle=f.color;
+    ctx.fillText(f.text, f.x-tw/2, f.y);
+    ctx.globalAlpha=1;
+  });
+  ctx.restore();
 }
 
 let animTick=0;
 function loop(now){
   const dt = Math.min(0.05, (now-lastTime)/1000);
   lastTime = now;
+  if(now < hitStopUntil){
+    render();
+    requestAnimationFrame(loop);
+    return;
+  }
   animTick += dt;
   update(dt);
   render();
@@ -899,6 +1066,7 @@ function renderDialogBody(npc){
       dlgChoices.appendChild(choiceBtn(label, desc, ()=>{
         player.skillPoints -= 1;
         player.learnedSkills.push(s.id);
+        ensureSkillLevel(s.id);
         assignToFirstEmptySlot(s.id);
         log(`你習得了「${s.name}」！`);
         renderDialogBody(npc);
@@ -972,14 +1140,15 @@ function updateHotbarUI(){
     const box = boxes[i];
     if(!sid){ box.className='slot empty'; box.querySelector('.label').textContent='空'; box.querySelector('.cd').style.height='0'; continue; }
     const s = SKILLS[sid];
+    const eff = effectiveSkillStats(sid);
     box.className='slot';
     box.querySelector('.label').textContent = s.name;
     let qiEl = box.querySelector('.qi');
     if(!qiEl){ qiEl=document.createElement('span'); qiEl.className='qi'; box.appendChild(qiEl); }
-    qiEl.textContent = s.qi;
+    qiEl.textContent = eff.qi;
     const ready = (skillCd[sid]||0);
     const remain = Math.max(0, ready-now);
-    const pct = Math.min(1, remain/(s.cd*1000));
+    const pct = Math.min(1, remain/(eff.cd*1000));
     const cdEl = box.querySelector('.cd');
     cdEl.style.height = (pct*100)+'%';
     cdEl.textContent = pct>0 ? Math.ceil(remain/1000) : '';
@@ -1025,9 +1194,14 @@ function refreshSidebar(){
   }
   player.learnedSkills.forEach(sid=>{
     const s = SKILLS[sid];
+    const m = ensureSkillLevel(sid);
     const d = document.createElement('div');
     d.className='skill-item';
-    d.innerHTML = `<div class="sname">${s.name} <span class="small-note" style="display:inline;">(${SECT_HALL[s.sect]})</span></div>`;
+    d.innerHTML = `<div class="sname">${s.name} <span class="small-note" style="display:inline;">(${SECT_HALL[s.sect]})</span></div>
+      <div class="skill-level-row"><span class="lv">Lv.${m.level}</span>
+        <div class="prof-outer"><div class="prof-inner" style="width:${Math.min(100,m.prof/m.profNeeded*100)}%"></div></div>
+        <span class="small-note">${m.prof}/${m.profNeeded}</span>
+      </div>`;
     const slotsRow = document.createElement('div');
     slotsRow.className='skill-slots';
     for(let i=0;i<4;i++){
@@ -1108,6 +1282,8 @@ async function loadGame(silent){
       const data = JSON.parse(res.value);
       player = Object.assign(freshPlayer(), data);
       if(!player.hotbar) player.hotbar=[null,null,null,null];
+      if(!player.skillLevels) player.skillLevels={};
+      player.learnedSkills.forEach(sid=>ensureSkillLevel(sid));
       recalcDerived(player, false);
       refreshSidebar();
       if(!silent) log('讀檔成功。');
