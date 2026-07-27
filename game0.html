@@ -92,6 +92,8 @@ button:disabled{opacity:.4;cursor:not-allowed;}
   cursor:crosshair;
 }
 .hint{font-size:12px;color:var(--ink-faint);text-align:center;}
+.hotbar-row{display:flex;gap:10px;justify-content:center;align-items:center;}
+.panel-tabs{display:flex;gap:8px;padding-right:10px;border-right:1px solid var(--panel-line);}
 .hotbar{display:flex;gap:8px;justify-content:center;}
 .slot{
   width:64px;height:64px;
@@ -117,19 +119,24 @@ button:disabled{opacity:.4;cursor:not-allowed;}
   padding:6px 10px;font-size:12.5px;overflow-y:auto;line-height:1.6;color:var(--ink-soft);
 }
 .log div.newest{color:var(--seal-dark);font-weight:600;}
-.sidebar{
-  width:280px;max-width:100%;
-  background:var(--panel);border:1px solid var(--panel-line);
-  padding:10px 12px;font-size:13px;height:fit-content;
-  box-shadow:0 2px 6px rgba(0,0,0,.15);
-}
-.sidebar h3{
+.panel-body h3{
   font-family:'Ma Shan Zheng', cursive;
   font-size:19px;color:var(--seal-dark);
   margin:10px 0 8px;border-bottom:1px dashed var(--panel-line);padding-bottom:6px;
   letter-spacing:1px;
 }
-.sidebar h3:first-child{margin-top:0;}
+.panel-body h3:first-child{margin-top:0;}
+.panel-tab{
+  width:64px;height:64px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+  font-family:'Ma Shan Zheng', cursive;font-size:22px;
+  border:1px solid var(--gold);background:var(--panel);
+  color:var(--ink-soft);border-radius:4px;
+}
+.panel-tab .tab-label{font-family:'Noto Serif TC', serif;font-size:10px;color:var(--ink-faint);}
+.panel-tab.active{background:var(--gold);color:#fff;}
+.panel-tab.active .tab-label{color:rgba(255,255,255,.85);}
+.panel-body h3:first-child{margin-top:0;}
 .attr-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;}
 .attr-row .name{width:56px;color:var(--ink-faint);}
 .attr-row .val{width:26px;text-align:center;font-weight:bold;}
@@ -193,25 +200,40 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 <div class="gamewrap">
   <div class="canvasCol">
     <canvas id="gameCanvas" width="672" height="448"></canvas>
-    <div class="hotbar" id="hotbar"></div>
-    <div class="hint">WASD / 方向鍵 移動　　武功與攻擊可按鍵或滑鼠點擊技能欄施展　　Q 使用金瘡藥　R 使用續命丹　　滑鼠點擊敵人鎖定目標　　E 與人互動　　按鍵皆可於右上角「按鍵設定」自訂</div>
+    <div class="hotbar-row">
+      <div class="panel-tabs" id="panelTabs">
+        <button class="panel-tab" data-panel="attr" title="根基屬性">屬<span class="tab-label">屬性</span></button>
+        <button class="panel-tab" data-panel="skill" title="武學">武<span class="tab-label">武學</span></button>
+        <button class="panel-tab" data-panel="inv" title="行囊 / 裝備">囊<span class="tab-label">行囊</span></button>
+      </div>
+      <div class="hotbar" id="hotbar"></div>
+    </div>
+    <div class="hint">WASD / 方向鍵 移動　　武功會朝角色面向的前方自動命中範圍內敵人　　Q 使用金瘡藥　R 使用續命丹　　E 與人互動　　按鍵皆可於右上角「按鍵設定」自訂</div>
     <div class="log" id="logBox"></div>
-  </div>
-
-  <div class="sidebar">
-    <h3>根基屬性　可分配 <span id="freePts">3</span> 點</h3>
-    <div id="attrList"></div>
-    <div class="small-note">力量→外功傷害與氣血　身法→身法傷害與敏捷　內力→真氣上限與內功傷害　根骨→氣血上限與防禦</div>
-
-    <h3>武學　武學點 <span id="skillPts">1</span></h3>
-    <div id="skillList" style="max-height:170px;overflow-y:auto;"></div>
-
-    <h3>行囊 / 裝備</h3>
-    <div id="invList" style="max-height:120px;overflow-y:auto;"></div>
   </div>
 </div>
 
-<div class="footer-credit" id="footerCredit">水墨古風 · 即時戰鬥 · 自由學派、自由屬性，無職業限制</div>
+<!-- CENTER PANEL OVERLAY (屬性 / 武學 / 行囊) -->
+<div class="overlay" id="panelOverlay">
+  <div class="modal" id="panelModal">
+    <div class="panel-body" id="panel-attr">
+      <h3>根基屬性　可分配 <span id="freePts">3</span> 點</h3>
+      <div id="attrList"></div>
+      <div class="small-note">力量→外功傷害與氣血　身法→身法傷害與敏捷　內力→真氣上限與內功傷害　根骨→氣血上限與防禦</div>
+    </div>
+    <div class="panel-body" id="panel-skill" style="display:none;">
+      <h3>武學　武學點 <span id="skillPts">1</span></h3>
+      <div id="skillList" style="max-height:220px;overflow-y:auto;"></div>
+    </div>
+    <div class="panel-body" id="panel-inv" style="display:none;">
+      <h3>行囊 / 裝備</h3>
+      <div id="invList" style="max-height:220px;overflow-y:auto;"></div>
+    </div>
+    <button id="panelCloseBtn" style="margin-top:8px;">關閉</button>
+  </div>
+</div>
+
+<div class="footer-credit" id="footerCredit">俯視地圖 · 即時戰鬥 · 自由學派、自由屬性，無職業限制</div>
 <div class="deathflash" id="deathFlash"></div>
 
 <!-- START OVERLAY -->
@@ -278,203 +300,132 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 (function(){
 
 // ---------- Constants ----------
-const GAME_VERSION = 'v0.8.0';
-const FIG_SCALE = 2; // character visual size multiplier (independent of tile size)
-const COLS=24, ROWS=16, TILE=56;
-const VIEW_W=672, VIEW_H=448; // fixed on-screen viewport; camera scrolls within the larger world
-const CANVAS_W=COLS*TILE, CANVAS_H=ROWS*TILE;
+const GAME_VERSION = 'v2.1.0';
+const FIG_SCALE = 2; // character visual size multiplier
+const VIEW_W=672, VIEW_H=448; // fixed on-screen viewport (camera follows the player in the larger world)
 
-// ---------- Map generation (unchanged layout) ----------
-let grid = [];
-let spawnTiles = [];
-let SAFE_ZONE_COL = 10; // village (col < this) is a safe zone; enemies cannot enter
+// ---------- World (top-down, per-scene open area) ----------
+let WORLD_W = 1400, WORLD_H = 1000;
+let currentGates = [];
 let currentScene = 'village';
-const GATE_POS = {village:{x:23,y:8}, scene2:{x:0,y:7}};
 
-function buildMap(){
-  grid = [];
-  for(let r=0;r<ROWS;r++){
-    let row=[];
-    for(let c=0;c<COLS;c++){
-      if(r===0||r===ROWS-1||c===0||c===COLS-1) row.push('T');
-      else if(c<=9) row.push('.');
-      else row.push(',');
-    }
-    grid.push(row);
-  }
-  const buildings=[
-    {x:3,y:2,w:2,h:2},{x:6,y:2,w:2,h:2},
-    {x:3,y:6,w:2,h:2},{x:6,y:6,w:2,h:2},
-    {x:3,y:10,w:2,h:2},{x:6,y:10,w:2,h:2},
+function setupVillageStage(){
+  WORLD_W = 1400; WORLD_H = 1000;
+  currentGates = [{x:1350, y:500, to:'forest', locked:false}];
+}
+function setupForestStage(){
+  WORLD_W = 1800; WORLD_H = 1300;
+  currentGates = [
+    {x:60, y:650, to:'village', locked:false},
+    {x:1750, y:650, to:'scene2', locked:true},
   ];
-  buildings.forEach(b=>{
-    for(let yy=b.y;yy<b.y+b.h;yy++)
-      for(let xx=b.x;xx<b.x+b.w;xx++)
-        grid[yy][xx]='#';
-  });
-  [[13,5],[14,5],[13,6],[14,6],[15,6]].forEach(([x,y])=>{grid[y][x]='~';});
-  [[12,3],[16,4],[19,7],[14,10],[18,12],[11,9],[20,3],[21,10],[12,13]].forEach(([x,y])=>{
-    if(grid[y] && grid[y][x]===',') grid[y][x]='T';
-  });
-  grid[GATE_POS.village.y][GATE_POS.village.x] = 'G';
-  SAFE_ZONE_COL = 10;
-  spawnTiles = [];
-  for(let r=1;r<ROWS-1;r++) for(let c=10;c<COLS-1;c++){
-    if(grid[r][c]===',') spawnTiles.push({x:c*TILE+TILE/2, y:r*TILE+TILE/2});
-  }
 }
-function buildScene2Map(){
-  grid = [];
-  for(let r=0;r<ROWS;r++){
-    let row=[];
-    for(let c=0;c<COLS;c++){
-      if(r===0||r===ROWS-1||c===COLS-1) row.push('T');
-      else if(c===0) row.push('T');
-      else if(c<=3) row.push('.');
-      else row.push(',');
-    }
-    grid.push(row);
-  }
-  for(let yy=6;yy<8;yy++) for(let xx=1;xx<3;xx++) grid[yy][xx]='#';
-  [[8,4],[14,3],[18,9],[10,12],[16,13],[6,10],[20,6],[9,2]].forEach(([x,y])=>{
-    if(grid[y] && grid[y][x]===',') grid[y][x]='T';
-  });
-  [[12,7],[13,7],[12,8],[13,8]].forEach(([x,y])=>{ grid[y][x]='~'; });
-  grid[GATE_POS.scene2.y][GATE_POS.scene2.x] = 'G';
-  SAFE_ZONE_COL = 4;
-  spawnTiles = [];
-  for(let r=1;r<ROWS-1;r++) for(let c=4;c<COLS-1;c++){
-    if(grid[r][c]===',') spawnTiles.push({x:c*TILE+TILE/2, y:r*TILE+TILE/2});
-  }
+function setupScene2Stage(){
+  WORLD_W = 1600; WORLD_H = 1100;
+  currentGates = [{x:60, y:550, to:'forest', locked:false}];
 }
-buildMap();
+setupVillageStage();
 
-function tileBlocked(px,py){
-  const c = Math.floor(px/TILE), r = Math.floor(py/TILE);
-  if(r<0||r>=ROWS||c<0||c>=COLS) return true;
-  const t = grid[r][c];
-  return t==='T' || t==='~' || t==='#' || t==='G';
-}
-function playerBlocked(px,py){
-  const c = Math.floor(px/TILE), r = Math.floor(py/TILE);
-  if(r<0||r>=ROWS||c<0||c>=COLS) return true;
-  const t = grid[r][c];
-  if(t==='G') return player.storyChapter<1;
-  return t==='T' || t==='~' || t==='#';
-}
-function enemyBlocked(px,py){
-  if(tileBlocked(px,py)) return true;
-  return Math.floor(px/TILE) < SAFE_ZONE_COL;
-}
+function clampPlayerX(px){ return Math.max(30, Math.min(WORLD_W-30, px)); }
+function clampPlayerY(py){ return Math.max(30, Math.min(WORLD_H-30, py)); }
 
-// ---------- Cartoon "Little Fighter" style background (baked once) ----------
+// ---------- Painted top-down backdrop (baked once per scene) ----------
 const bgCanvas = document.createElement('canvas');
-bgCanvas.width = CANVAS_W; bgCanvas.height = CANVAS_H;
 const bctx = bgCanvas.getContext('2d');
 function seededRand(seed){ let x = Math.sin(seed)*10000; return x-Math.floor(x); }
 
-function paintTile(c,r){
-  const x=c*TILE, y=r*TILE, cx=x+TILE/2, cy=y+TILE/2;
-  const t = grid[r][c];
-  const seed = c*137.3 + r*911.7;
-  bctx.lineWidth = 1;
-  if(t==='.'){
-    bctx.fillStyle = (c+r)%2===0 ? '#e8c988' : '#e2c17e';
-    bctx.fillRect(x,y,TILE,TILE);
-    bctx.strokeStyle='rgba(140,100,40,0.25)';
-    bctx.strokeRect(x+0.5,y+0.5,TILE-1,TILE-1);
-  } else if(t===','){
-    bctx.fillStyle = (c+r)%2===0 ? '#7bc25c' : '#72b852';
-    bctx.fillRect(x,y,TILE,TILE);
-    bctx.fillStyle='rgba(255,255,255,0.12)';
-    bctx.beginPath(); bctx.arc(x+7,y+7,3,0,Math.PI*2); bctx.fill();
-    bctx.fillStyle='rgba(0,60,0,0.10)';
-    bctx.beginPath(); bctx.arc(x+TILE-8,y+TILE-8,4,0,Math.PI*2); bctx.fill();
-  } else if(t==='T'){
-    bctx.fillStyle = (c+r)%2===0 ? '#7bc25c' : '#72b852';
-    bctx.fillRect(x,y,TILE,TILE);
-    bctx.fillStyle='#7a4a26';
-    bctx.strokeStyle='#2c1c10'; bctx.lineWidth=2;
-    bctx.fillRect(cx-3,cy+1,6,11);
-    bctx.strokeRect(cx-3,cy+1,6,11);
-    bctx.beginPath();
-    bctx.arc(cx, cy-6, TILE*0.46, 0, Math.PI*2);
-    bctx.fillStyle='#3a9a44';
-    bctx.fill();
-    bctx.strokeStyle='#1f5c26'; bctx.lineWidth=2.2;
-    bctx.stroke();
-    bctx.fillStyle='#57c25f';
-    bctx.beginPath(); bctx.arc(cx-6,cy-11,TILE*0.2,0,Math.PI*2); bctx.fill();
-  } else if(t==='~'){
-    bctx.fillStyle = '#4fb3d9';
-    bctx.fillRect(x,y,TILE,TILE);
-    bctx.strokeStyle='rgba(255,255,255,0.55)';
-    bctx.lineWidth=2;
-    bctx.beginPath();
-    bctx.moveTo(x+2, cy+ (seededRand(seed)-0.5)*6);
-    bctx.quadraticCurveTo(cx, cy-5, x+TILE-2, cy+(seededRand(seed+1)-0.5)*6);
-    bctx.stroke();
-  } else if(t==='#'){
-    bctx.fillStyle = '#7bc25c';
-    bctx.fillRect(x,y,TILE,TILE);
-    bctx.strokeStyle='#1f2418'; bctx.lineWidth=2;
-    bctx.fillStyle='#f2e2b8';
-    bctx.fillRect(x+2,y+9,TILE-4,TILE-11);
-    bctx.strokeRect(x+2,y+9,TILE-4,TILE-11);
-    bctx.fillStyle='#d94b3e';
-    bctx.beginPath();
-    bctx.moveTo(x-1, y+10);
-    bctx.lineTo(x+TILE/2, y-2);
-    bctx.lineTo(x+TILE+1, y+10);
-    bctx.closePath();
-    bctx.fill();
-    bctx.stroke();
-    bctx.fillStyle='#8a5a2c';
-    bctx.fillRect(cx-3, y+TILE-9, 6, 9);
-  } else if(t==='G'){
-    bctx.fillStyle = '#9fae82';
-    bctx.fillRect(x,y,TILE,TILE);
-    bctx.strokeStyle='#2c2418'; bctx.lineWidth=2;
-    bctx.fillStyle='#6b6355';
-    bctx.fillRect(x+3,y-3,5,TILE+6); bctx.strokeRect(x+3,y-3,5,TILE+6);
-    bctx.fillRect(x+TILE-8,y-3,5,TILE+6); bctx.strokeRect(x+TILE-8,y-3,5,TILE+6);
-    bctx.fillStyle='#8c3730';
-    bctx.fillRect(x+1,y-6,TILE-2,5); bctx.strokeRect(x+1,y-6,TILE-2,5);
-  }
-  // safe-zone fence marking the village border
-  if(c===SAFE_ZONE_COL-1 && t!=='T' && t!=='#'){
-    bctx.strokeStyle='#8a5a2c'; bctx.lineWidth=3;
-    bctx.beginPath(); bctx.moveTo(x+TILE-1,y); bctx.lineTo(x+TILE-1,y+TILE); bctx.stroke();
-    bctx.fillStyle='#a3352c';
-    bctx.beginPath(); bctx.arc(x+TILE-1, y+TILE/2, 3, 0, Math.PI*2); bctx.fill();
-  }
+function drawTreeProp(gx, by){
+  bctx.fillStyle='#7a4a26'; bctx.strokeStyle='#2c1c10'; bctx.lineWidth=2;
+  bctx.fillRect(gx-4,by-26,8,26); bctx.strokeRect(gx-4,by-26,8,26);
+  bctx.beginPath(); bctx.arc(gx, by-40, 30, 0, Math.PI*2);
+  bctx.fillStyle='#3a9a44'; bctx.fill(); bctx.strokeStyle='#1f5c26'; bctx.lineWidth=2.2; bctx.stroke();
+  bctx.fillStyle='#57c25f';
+  bctx.beginPath(); bctx.arc(gx-9,by-49,15,0,Math.PI*2); bctx.fill();
 }
+function drawBuildingProp(nx, by, kind){
+  const w=110, h=95;
+  const x0 = nx - w/2, y0 = by-h;
+  bctx.strokeStyle='#1f2418'; bctx.lineWidth=2.5;
+  bctx.fillStyle='#f2e2b8';
+  bctx.fillRect(x0, y0+18, w, h-18); bctx.strokeRect(x0, y0+18, w, h-18);
+  bctx.fillStyle = kind==='shop' ? '#4f8d75' : (kind==='train' ? '#6a4a5a' : '#d94b3e');
+  bctx.beginPath();
+  bctx.moveTo(x0-8, y0+22); bctx.lineTo(x0+w/2, y0-10); bctx.lineTo(x0+w+8, y0+22);
+  bctx.closePath(); bctx.fill(); bctx.stroke();
+  bctx.fillStyle='#8a5a2c';
+  bctx.fillRect(nx-14, by-34, 28, 34);
+}
+function drawGateProp(gx, gy){
+  bctx.strokeStyle='#2c2418'; bctx.lineWidth=3;
+  bctx.fillStyle='#6b6355';
+  bctx.fillRect(gx-42,gy-70,14,140); bctx.strokeRect(gx-42,gy-70,14,140);
+  bctx.fillRect(gx+28,gy-70,14,140); bctx.strokeRect(gx+28,gy-70,14,140);
+  bctx.fillStyle='#8c3730';
+  bctx.fillRect(gx-52,gy-88,118,20); bctx.strokeRect(gx-52,gy-88,118,20);
+}
+
 function bakeBackground(){
-  for(let r=0;r<ROWS;r++) for(let c=0;c<COLS;c++) paintTile(c,r);
+  bgCanvas.width = WORLD_W; bgCanvas.height = WORLD_H;
+  const baseColor = currentScene==='village' ? '#e2c17e' : (currentScene==='forest' ? '#7bc25c' : '#c9b478');
+  bctx.fillStyle = baseColor;
+  bctx.fillRect(0,0,WORLD_W,WORLD_H);
+  bctx.strokeStyle='rgba(0,0,0,.12)'; bctx.lineWidth=6;
+  bctx.strokeRect(3,3,WORLD_W-6,WORLD_H-6);
+
+  for(let i=0;i<160;i++){
+    const tx = seededRand(i*13.1)*WORLD_W, ty = seededRand(i*7.7+3)*WORLD_H;
+    bctx.fillStyle = currentScene==='village' ? 'rgba(140,100,40,0.10)' : 'rgba(255,255,255,0.09)';
+    bctx.beginPath(); bctx.ellipse(tx,ty,26,12,seededRand(i)*3,0,Math.PI*2); bctx.fill();
+  }
+
+  if(currentScene==='village'){
+    NPCS.forEach(n=>{ drawBuildingProp(n.x, n.y+42, n.type); });
+    for(let i=0;i<10;i++){
+      const tx = 60+seededRand(i*4.4)*(WORLD_W-120);
+      const ty = 60+seededRand(i*6.6+2)*(WORLD_H-120);
+      if(seededRand(i*8.8)>0.55) drawTreeProp(tx,ty);
+    }
+  } else if(currentScene==='forest'){
+    for(let i=0;i<60;i++){
+      const tx = 100+seededRand(i*3.3)*(WORLD_W-200);
+      const ty = 100+seededRand(i*5.5+2)*(WORLD_H-200);
+      if(seededRand(i*9.1)>0.32) drawTreeProp(tx,ty);
+    }
+  } else {
+    NPCS.forEach(n=>{ if(n.type==='shop') drawBuildingProp(n.x, n.y+42, n.type); });
+    for(let i=0;i<24;i++){
+      const tx = 100+seededRand(i*4.1)*(WORLD_W-200);
+      const ty = 100+seededRand(i*6.2+2)*(WORLD_H-200);
+      if(seededRand(i*8.3)>0.5) drawTreeProp(tx,ty);
+    }
+  }
+
+  currentGates.forEach(g=>drawGateProp(g.x,g.y));
 }
-bakeBackground();
 
 // ---------- NPC definitions ----------
 const NPCS_VILLAGE = [
-  {id:'shaolin', name:'少林長老 · 覺明', x:3, y:4, color:'#c98a3a', type:'trainer', sect:'shaolin', accessory:'bald',
+  {id:'shaolin', name:'少林長老 · 覺明', x:280, y:280, color:'#c98a3a', type:'trainer', sect:'shaolin', accessory:'bald', prop:'beads',
    greet:'阿彌陀佛。少林拳腳，剛猛霸道，練的是筋骨氣力。少俠若有緣，老衲便傾囊相授。'},
-  {id:'wudang', name:'武當道長 · 清虛', x:6, y:4, color:'#7a93a8', type:'trainer', sect:'wudang', accessory:'topknot',
+  {id:'wudang', name:'武當道長 · 清虛', x:620, y:250, color:'#7a93a8', type:'trainer', sect:'wudang', accessory:'topknot', prop:'whisk',
    greet:'太極之道，以柔克剛，內外兼修。道友身法內力若有根基，貧道自當指點一二。'},
-  {id:'beggar', name:'丐幫長老 · 洪七', x:3, y:8, color:'#8a7355', type:'trainer', sect:'beggar', accessory:'patches',
+  {id:'beggar', name:'丐幫長老 · 洪七', x:960, y:300, color:'#8a7355', type:'trainer', sect:'beggar', accessory:'patches', prop:'gourd',
    greet:'嘿，小子骨頭輕不輕？丐幫棒法講究一個「快」字，學會了打狗都不怕！'},
-  {id:'smith', name:'鐵匠 · 老鐵', x:6, y:8, color:'#7a3a2a', type:'shop', shop:'weapon', accessory:'apron',
+  {id:'smith', name:'鐵匠 · 老鐵', x:300, y:680, color:'#7a3a2a', type:'shop', shop:'weapon', accessory:'apron',
    greet:'兵器、護具，老鐵這裡樣樣齊全，銀兩管夠就成交！'},
-  {id:'herb', name:'藥鋪掌櫃 · 蘇娘', x:3, y:12, color:'#4f8d75', type:'shop', shop:'potion', accessory:'bun',
+  {id:'herb', name:'藥鋪掌櫃 · 蘇娘', x:640, y:700, color:'#4f8d75', type:'shop', shop:'potion', accessory:'bun',
    greet:'金瘡藥、續命丹，出門在外傷病難免，多備幾瓶總是好的。'},
-  {id:'coach', name:'教頭 · 方大牛', x:6, y:12, color:'#6a4a5a', type:'train', accessory:'headband',
+  {id:'coach', name:'教頭 · 方大牛', x:960, y:670, color:'#6a4a5a', type:'train', accessory:'headband',
    greet:'花點銀兩，跟我操練操練筋骨，包管你脫胎換骨！'},
-  {id:'elder', name:'神秘老者', x:21, y:8, color:'#6a6a52', type:'story', accessory:'beard',
+];
+const NPCS_FOREST = [
+  {id:'elder', name:'神秘老者', x:1600, y:650, color:'#6a6a52', type:'story', accessory:'beard',
    greet:'小友，老朽在此已候多時了……'},
 ];
 const NPCS_SCENE2 = [
-  {id:'innkeeper', name:'邊城客棧 · 掌櫃', x:1, y:6, color:'#4f8d75', type:'shop', shop:'potion', accessory:'apron',
+  {id:'innkeeper', name:'邊城客棧 · 掌櫃', x:280, y:400, color:'#4f8d75', type:'shop', shop:'potion', accessory:'apron',
    greet:'邊城不比中原太平，多備些傷藥防身罷。'},
-  {id:'wanderer', name:'流浪劍客 · 沈孤', x:2, y:12, color:'#5a6a8a', type:'story2', accessory:'sword_back',
+  {id:'wanderer', name:'流浪劍客 · 沈孤', x:550, y:750, color:'#5a6a8a', type:'story2', accessory:'sword_back',
    greet:'又一個從中原來的少俠……看來風聲已經傳開了。'},
 ];
 let NPCS = NPCS_VILLAGE;
@@ -482,21 +433,24 @@ let NPCS = NPCS_VILLAGE;
 const STORY_CH1_TEXT = '老者嘆道：「十年前一場血案，滅了你全家滿門，兇手至今下落不明，江湖傳言與『邊城』一帶的黑道勢力脫不了關係。」\n\n「你若真想查明真相，需先在此練就一身武藝，再往東方山道而去，邊城之中，或許藏著你要的答案。」\n\n老者說罷，讓開了身後的山道。';
 const STORY_ELDER_LATER = '前路便是山道，少俠自去闖蕩罷，老朽就不遠送了。查明真相之後，記得回來看看老朽。';
 const STORY_2_TEXT = '沈孤上下打量你一番，緩緩道：「中原來的少俠，是為了十年前那樁血案？」\n\n「這邊城魚龍混雜，黑白難分。你要打聽消息，恐怕還得先讓這裡的人瞧瞧你的本事……」';
+const STORY_3_TEXT = '沈孤沉吟片刻，取出一枚令牌：「邊城地下賭坊『黑龍會』，聽說十年前那樁血案，跟賭坊背後的『鐵面判官』脫不了干係。」\n\n「此人心狠手辣，武功深不可測。少俠若要尋仇，且先在邊城歷練一番，將這一帶宵小盡數剿滅，屆時我自當助你一臂之力，闖入黑龍會。」\n\n沈孤將令牌拋給你。';
+const STORY_3_LATER = '黑龍會的線索還在查，少俠先把邊城附近的宵小清乾淨，我們再從長計議。';
+const STORY_END_TEASE = '（更多劇情——闖入黑龍會、對決鐵面判官——將在後續版本中展開，敬請期待。）';
 
 // ---------- Skill DB (now with cooldown + range for real-time combat) ----------
 const SKILLS = {
-  luohan:  {id:'luohan', name:'羅漢拳', sect:'shaolin', tier:1, reqAttr:'str', reqVal:5, qi:5, cd:3.0, range:104,
-            dmg:(p)=>8+p.str*1.2, desc:'剛猛拳法，力量越高傷害越強', anim:'punch', fx:'#e2c17e'},
-  weituo:  {id:'weituo', name:'韋陀伏魔杖', sect:'shaolin', tier:2, reqAttr:'str', reqVal:12, need:'luohan', qi:11, cd:6.0, range:112,
-            dmg:(p)=>16+p.str*1.6, desc:'少林棍法絕學，重擊傷敵', anim:'staff_overhead', fx:'#c98a3a'},
-  taiji:   {id:'taiji', name:'太極拳', sect:'wudang', tier:1, reqAttr:'agi', reqVal:5, reqAttr2:'int', reqVal2:5, qi:8, cd:4.0, range:108,
-            dmg:(p)=>6+((p.agi+p.int)/2)*1.1, desc:'以柔克剛，身法內力並重', anim:'palm_circle', fx:'#7bc7d9'},
-  liangyi: {id:'liangyi', name:'兩儀劍法', sect:'wudang', tier:2, reqAttr:'agi', reqVal:12, reqAttr2:'int', reqVal2:12, need:'taiji', qi:15, cd:7.0, range:120,
-            dmg:(p)=>14+((p.agi+p.int)/2)*1.4, desc:'武當劍術精髓，攻守兼備', anim:'sword_slash', fx:'#dff0f5'},
-  gougun:  {id:'gougun', name:'打狗棒法', sect:'beggar', tier:1, reqAttr:'agi', reqVal:5, qi:6, cd:3.5, range:116,
-            dmg:(p)=>7+p.agi*1.3, desc:'幫主絕學，身法越快越犀利', anim:'staff_sweep', fx:'#a5865a'},
-  xianglong:{id:'xianglong', name:'降龍十八掌', sect:'beggar', tier:2, reqAttr:'agi', reqVal:15, reqAttr2:'str', reqVal2:10, need:'gougun', qi:20, cd:9.0, range:124,
-            dmg:(p)=>25+p.agi*1+p.str*1, desc:'天下至剛掌法，一擊定勝負', anim:'palm_slam', fx:'#e8b23a'},
+  luohan:  {id:'luohan', name:'羅漢拳', sect:'shaolin', tier:1, reqAttr:'str', reqVal:5, qi:5, cd:3.0, range:104, targetMode:'single',
+            dmg:(p)=>8+p.str*1.2, desc:'剛猛拳法，力量越高傷害越強，擊中範圍內最近一人', anim:'punch', fx:'#e2c17e'},
+  weituo:  {id:'weituo', name:'韋陀伏魔杖', sect:'shaolin', tier:2, reqAttr:'str', reqVal:12, need:'luohan', qi:11, cd:6.0, range:112, targetMode:'aoe',
+            dmg:(p)=>16+p.str*1.6, desc:'少林棍法絕學，重擊範圍內所有敵人', anim:'staff_overhead', fx:'#c98a3a'},
+  taiji:   {id:'taiji', name:'太極拳', sect:'wudang', tier:1, reqAttr:'agi', reqVal:5, reqAttr2:'int', reqVal2:5, qi:8, cd:4.0, range:108, targetMode:'aoe',
+            dmg:(p)=>6+((p.agi+p.int)/2)*1.1, desc:'以柔克剛，畫圓推掌，波及範圍內所有敵人', anim:'palm_circle', fx:'#7bc7d9'},
+  liangyi: {id:'liangyi', name:'兩儀劍法', sect:'wudang', tier:2, reqAttr:'agi', reqVal:12, reqAttr2:'int', reqVal2:12, need:'taiji', qi:15, cd:7.0, range:120, targetMode:'single',
+            dmg:(p)=>14+((p.agi+p.int)/2)*1.4, desc:'武當劍術精髓，精準直取範圍內最近一人', anim:'sword_slash', fx:'#dff0f5'},
+  gougun:  {id:'gougun', name:'打狗棒法', sect:'beggar', tier:1, reqAttr:'agi', reqVal:5, qi:6, cd:3.5, range:116, targetMode:'single',
+            dmg:(p)=>7+p.agi*1.3, desc:'幫主絕學，快速點中範圍內最近一人', anim:'staff_sweep', fx:'#a5865a'},
+  xianglong:{id:'xianglong', name:'降龍十八掌', sect:'beggar', tier:2, reqAttr:'agi', reqVal:15, reqAttr2:'str', reqVal2:10, need:'gougun', qi:20, cd:9.0, range:124, targetMode:'aoe',
+            dmg:(p)=>25+p.agi*1+p.str*1, desc:'天下至剛掌法，一擊震盪範圍內所有敵人', anim:'palm_slam', fx:'#e8b23a'},
 };
 const SECT_HALL = {shaolin:'少林殿', wudang:'武當觀', beggar:'丐幫堂'};
 const BASIC_CD = 0.6, BASIC_RANGE = 92;
@@ -504,10 +458,10 @@ const BASIC_ANIM = {anim:'punch', fx:'#f0e0c0'};
 
 // ---------- Enemy DB ----------
 const ENEMY_DEFS = [
-  {id:'bandit', name:'山賊', hp:30, atk:6, def:2, xp:15, silver:10, color:'#7a5a3a', weight:34, speed:140, aggro:240, atkRange:68},
-  {id:'wolf', name:'惡狼', hp:24, atk:8, def:1, xp:12, silver:8, color:'#5a5a5a', weight:30, speed:190, aggro:260, atkRange:60},
-  {id:'rogue', name:'邪修散人', hp:46, atk:10, def:4, xp:30, silver:20, color:'#5a2a5a', weight:22, speed:130, aggro:280, atkRange:72},
-  {id:'python', name:'巨蟒', hp:62, atk:12, def:5, xp:45, silver:32, color:'#3a5a2a', weight:14, speed:110, aggro:220, atkRange:76},
+  {id:'bandit', name:'山賊', level:1, hp:30, atk:6, def:2, xp:15, silver:10, color:'#7a5a3a', weight:34, speed:140, aggro:240, atkRange:68, atkAnim:'sword_slash', atkFx:'#dfe8ea', maxQi:30, qiRegen:4, skillQiCost:30},
+  {id:'wolf', name:'惡狼', level:2, hp:24, atk:8, def:1, xp:12, silver:8, color:'#5a5a5a', weight:30, speed:190, aggro:260, atkRange:60, atkAnim:'claw', atkFx:'#e0e0e0', bodyType:'wolf', maxQi:24, qiRegen:5, skillQiCost:24},
+  {id:'rogue', name:'邪修散人', level:3, hp:46, atk:10, def:4, xp:30, silver:20, color:'#5a2a5a', weight:22, speed:130, aggro:280, atkRange:72, atkAnim:'palm_circle', atkFx:'#b06ad9', maxQi:40, qiRegen:4, skillQiCost:40},
+  {id:'python', name:'巨蟒', level:4, hp:62, atk:12, def:5, xp:45, silver:32, color:'#3a5a2a', weight:14, speed:110, aggro:220, atkRange:76, atkAnim:'coil_slam', atkFx:'#7fd05a', bodyType:'python', maxQi:50, qiRegen:3, skillQiCost:50},
 ];
 function pickEnemyDef(){
   const total = ENEMY_DEFS.reduce((s,e)=>s+e.weight,0);
@@ -545,8 +499,8 @@ function freshPlayer(){
     inventory:{ hp_potion:1, qi_potion:1 },
     weapon:null, armor:null,
     trainCount:{str:0,agi:0,int:0,con:0},
-    px: 5*TILE+TILE/2, py: 13*TILE+TILE/2,
-    facing:'down',
+    px: 700, py: 500,
+    facing:'right',
     storyChapter:0,
     scene:'village',
   };
@@ -629,7 +583,7 @@ let enemies = [];
 let nextUid = 1;
 let skillCd = {};       // skillId -> timestamp(ms) when ready
 let basicCdUntil = 0;
-let focusTarget = null; // enemy uid
+let groundFX = [];      // skill cast-zone area effects
 let invulnerableUntil = 0;
 let lastHitFlash = 0;
 let combo = {lastSkill:null, stacks:0, expireAt:0};
@@ -640,20 +594,44 @@ let hitStopUntil = 0;
 let playerAttackAnim = {start:0, duration:220, anim:'punch', fx:'#f0e0c0'};
 
 function spawnEnemy(){
-  if(enemies.length >= 5 || spawnTiles.length===0) return;
+  if(currentScene==='village') return;
+  if(enemies.length >= 5) return;
   const base = pickEnemyDef();
   const buff = currentScene==='scene2' ? 1.4 : 1;
-  const def = buff===1 ? base : {...base, hp:Math.round(base.hp*buff), atk:Math.round(base.atk*buff), xp:Math.round(base.xp*buff), silver:Math.round(base.silver*buff)};
-  const pos = spawnTiles[Math.floor(Math.random()*spawnTiles.length)];
+  const def = buff===1 ? base : {...base, hp:Math.round(base.hp*buff), atk:Math.round(base.atk*buff), xp:Math.round(base.xp*buff), silver:Math.round(base.silver*buff), maxQi:Math.round(base.maxQi*buff)};
+  let x,y,tries=0;
+  do{
+    x = 100 + Math.random()*(WORLD_W-200);
+    y = 100 + Math.random()*(WORLD_H-200);
+    tries++;
+  } while(nearNPCZone(x,y) && tries<20);
   enemies.push({
     uid: nextUid++, kind:def,
     name:def.name, color:def.color,
     hp:def.hp, maxHp:def.hp,
-    x:pos.x, y:pos.y, spawnX:pos.x, spawnY:pos.y,
+    qi:def.maxQi, maxQi:def.maxQi,
+    x, y, spawnX:x, spawnY:y,
     state:'idle', stateTimer: Math.random()*2,
   });
 }
 for(let i=0;i<5;i++) spawnEnemy();
+
+// ---------- Destructible obstacles ----------
+let obstacles = [];
+function setupObstacles(){
+  obstacles = [];
+  if(currentScene==='village') return;
+  const count = 6;
+  for(let i=0;i<count;i++){
+    let x,y,tries=0;
+    do{
+      x = 150 + Math.random()*(WORLD_W-300);
+      y = 150 + Math.random()*(WORLD_H-300);
+      tries++;
+    } while(nearNPCZone(x,y) && tries<20);
+    obstacles.push({x,y,hp:26,maxHp:26,kind: Math.random()<0.5?'crate':'rock'});
+  }
+}
 function scheduleRespawn(){
   setTimeout(()=>{ if(!inputLocked) spawnEnemy(); else setTimeout(spawnEnemy, 3000); }, 8000+Math.random()*7000);
 }
@@ -661,21 +639,24 @@ function scheduleRespawn(){
 // ---------- Scene management ----------
 function setupSceneMap(name){
   currentScene = name;
-  if(name==='scene2'){ buildScene2Map(); NPCS = NPCS_SCENE2; }
-  else { buildMap(); NPCS = NPCS_VILLAGE; }
+  if(name==='forest'){ setupForestStage(); NPCS = NPCS_FOREST; }
+  else if(name==='scene2'){ setupScene2Stage(); NPCS = NPCS_SCENE2; }
+  else { setupVillageStage(); NPCS = NPCS_VILLAGE; }
   bakeBackground();
   enemies = [];
   for(let i=0;i<5;i++) spawnEnemy();
-  focusTarget = null;
+  setupObstacles();
 }
 function enterScene(name){
+  const from = currentScene;
   setupSceneMap(name);
-  if(name==='scene2'){
-    player.px = 2*TILE+TILE/2; player.py = 7*TILE+TILE/2;
-    log('你穿過山道，來到了邊城地界……');
-  } else {
-    player.px = 21*TILE+TILE/2; player.py = 8*TILE+TILE/2;
-    log('你返回了熟悉的村莊。');
+  if(name==='forest'){
+    if(from==='village'){ player.px=150; player.py=650; log('你走出村莊，踏入了林間小徑……'); }
+    else { player.px=1650; player.py=650; log('你穿過山道，回到了森林之中。'); }
+  } else if(name==='village'){
+    player.px=1280; player.py=500; log('你返回了熟悉的村莊。');
+  } else if(name==='scene2'){
+    player.px=150; player.py=550; log('你穿過山道，來到了邊城地界……');
   }
   player.scene = currentScene;
 }
@@ -779,18 +760,6 @@ let inputLocked = false;
 
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-canvas.addEventListener('click', e=>{
-  if(inputLocked) return;
-  const rect = canvas.getBoundingClientRect();
-  const mx = (e.clientX-rect.left) * (VIEW_W/rect.width) + camX;
-  const my = (e.clientY-rect.top) * (VIEW_H/rect.height) + camY;
-  let hit=null, bestD=44;
-  enemies.forEach(en=>{
-    const d = Math.hypot(en.x-mx, en.y-my);
-    if(d<bestD){ bestD=d; hit=en; }
-  });
-  focusTarget = hit ? hit.uid : null;
-});
 
 // ---------- Movement / loop ----------
 let lastTime = performance.now();
@@ -798,20 +767,41 @@ const SPEED = 300;
 
 function findEnemyByUid(uid){ return enemies.find(e=>e.uid===uid); }
 
-function pickTarget(range){
-  if(focusTarget){
-    const t = findEnemyByUid(focusTarget);
-    if(t && Math.hypot(t.x-player.px, t.y-player.py) <= range) return t;
+function getFacingVector(){
+  switch(player.facing){
+    case 'left': return {x:-1,y:0};
+    case 'right': return {x:1,y:0};
+    case 'up': return {x:0,y:-1};
+    default: return {x:0,y:1};
   }
-  let best=null, bestD=range;
-  enemies.forEach(en=>{
-    const d = Math.hypot(en.x-player.px, en.y-player.py);
-    if(d<=bestD){ bestD=d; best=en; }
+}
+function castZoneCenter(range){
+  const fv = getFacingVector();
+  return {x: player.px + fv.x*range*0.55, y: player.py + fv.y*range*0.55};
+}
+function getTargetsInFront(range, mode){
+  const fv = getFacingVector();
+  const candidates = enemies.filter(en=>{
+    const dx=en.x-player.px, dy=en.y-player.py;
+    const dist = Math.hypot(dx,dy);
+    if(dist>range) return false;
+    if(dist<1) return true;
+    const dot = (dx/dist)*fv.x + (dy/dist)*fv.y;
+    return dot > 0.35;
   });
-  return best;
+  if(mode==='single'){
+    if(candidates.length===0) return [];
+    candidates.sort((a,b)=>Math.hypot(a.x-player.px,a.y-player.py)-Math.hypot(b.x-player.px,b.y-player.py));
+    return [candidates[0]];
+  }
+  return candidates;
+}
+function spawnGroundFX(range, color, mode, iconId){
+  const c = castZoneCenter(range);
+  groundFX.push({x:c.x, y:c.y, radius: range*(mode==='aoe'?0.62:0.4), color, life:1.0, mode, iconId});
 }
 
-function applyPlayerDamage(target, rawDmg, comboKey){
+function computeComboMultiplier(comboKey){
   const now = performance.now();
   if(comboKey){
     if(combo.lastSkill && combo.lastSkill!==comboKey && now<combo.expireAt){
@@ -824,10 +814,12 @@ function applyPlayerDamage(target, rawDmg, comboKey){
   } else {
     combo.lastSkill = null; combo.stacks = 0;
   }
-  const mult = 1 + combo.stacks*0.12;
+  return 1 + combo.stacks*0.12;
+}
+
+function dealDamageToTarget(target, rawDmg, mult, isSkill){
   const dmg = Math.max(1, Math.round((rawDmg - target.kind.def) * mult));
   target.hp -= dmg;
-  const isSkill = !!comboKey;
   popFloater(target.x, target.y-18, dmg + (combo.stacks>0?` x${combo.stacks+1}`:''), isSkill?'#e8b23a':'#f0e0c0', isSkill);
   triggerImpact(target.x, target.y-6, {
     color: isSkill ? '#ffe9a8' : '#f0e0c0',
@@ -838,15 +830,13 @@ function applyPlayerDamage(target, rawDmg, comboKey){
   });
   const dx = target.x-player.px, dy = target.y-player.py, len=Math.hypot(dx,dy)||1;
   const kb = isSkill ? 28 : 16;
-  const nx = target.x + dx/len*kb, ny = target.y + dy/len*kb;
-  if(!tileBlocked(nx, target.y)) target.x = nx;
-  if(!tileBlocked(target.x, ny)) target.y = ny;
+  target.x = Math.max(30, Math.min(WORLD_W-30, target.x + dx/len*kb));
+  target.y = Math.max(30, Math.min(WORLD_H-30, target.y + dy/len*kb));
   if(target.hp<=0) killEnemy(target);
 }
 
 function killEnemy(target){
   enemies = enemies.filter(e=>e.uid!==target.uid);
-  if(focusTarget===target.uid) focusTarget=null;
   player.xp += target.kind.xp;
   player.silver += target.kind.silver;
   popFloater(target.x, target.y-30, `+${target.kind.xp}經驗 +${target.kind.silver}銀`, '#b08d43');
@@ -875,14 +865,17 @@ function useBasicAttack(){
   if(inputLocked) return;
   const now = performance.now();
   if(now < basicCdUntil) return;
-  const target = pickTarget(BASIC_RANGE);
-  if(!target){ return; }
   basicCdUntil = now + BASIC_CD*1000;
   playerAttackAnim.start = now;
   playerAttackAnim.anim = BASIC_ANIM.anim;
   playerAttackAnim.fx = BASIC_ANIM.fx;
+  spawnGroundFX(BASIC_RANGE, BASIC_ANIM.fx, 'single');
+  const targets = getTargetsInFront(BASIC_RANGE, 'single');
   const raw = 3 + player.str*0.5 + weaponPower();
-  applyPlayerDamage(target, raw, null);
+  const mult = computeComboMultiplier(null);
+  targets.forEach(t=>dealDamageToTarget(t, raw, mult, false));
+  const zone = castZoneCenter(BASIC_RANGE);
+  damageObstaclesInRange(zone.x, zone.y, BASIC_RANGE*0.5, Math.round(raw*0.6), true);
 }
 function useHotbarSlot(idx){
   if(inputLocked) return;
@@ -893,22 +886,48 @@ function useHotbarSlot(idx){
   const now = performance.now();
   if((skillCd[sid]||0) > now) return;
   if(player.qi < eff.qi) { log('內力不足！'); return; }
-  const target = pickTarget(eff.range);
-  if(!target){ return; }
   player.qi -= eff.qi;
   skillCd[sid] = now + eff.cd*1000;
   playerAttackAnim.start = now;
   playerAttackAnim.anim = s.anim;
   playerAttackAnim.fx = s.fx;
+  spawnGroundFX(eff.range, s.fx, s.targetMode, sid);
+  const targets = getTargetsInFront(eff.range, s.targetMode);
   const raw = (s.dmg(player) + weaponPower()*0.5) * eff.dmgMult;
-  applyPlayerDamage(target, raw, sid);
-  incrementProficiency(sid);
+  const mult = computeComboMultiplier(sid);
+  targets.forEach(t=>dealDamageToTarget(t, raw, mult, true));
+  const zone = castZoneCenter(eff.range);
+  damageObstaclesInRange(zone.x, zone.y, eff.range*0.5, Math.round(raw*0.6), true);
+  if(targets.length>0) incrementProficiency(sid);
   updateHUD();
+}
+
+const NPC_SAFE_RADIUS = 90;
+function nearNPCZone(x,y){
+  return NPCS.some(n=>Math.hypot(n.x-x,n.y-y) < NPC_SAFE_RADIUS);
+}
+function damageObstaclesInRange(x,y,range,dmg,byPlayer){
+  obstacles.forEach(ob=>{
+    if(ob.hp<=0) return;
+    if(Math.hypot(ob.x-x,ob.y-y) <= range+20){
+      ob.hp -= dmg;
+      popFloater(ob.x, ob.y-14, dmg, byPlayer?'#e8b23a':'#c98a3a');
+      if(ob.hp<=0){
+        triggerImpact(ob.x,ob.y-6,{color:'#c9a24b',particles:10,shakeTime:0.1,shakeMag:4});
+        if(byPlayer){
+          player.silver += 3;
+          popFloater(ob.x, ob.y-26, '+3銀', '#b08d43');
+        }
+      }
+    }
+  });
+  obstacles = obstacles.filter(ob=>ob.hp>0);
 }
 
 function updateEnemyAI(en, dt){
   const now = performance.now();
   const distToPlayer = Math.hypot(en.x-player.px, en.y-player.py);
+  en.qi = Math.min(en.maxQi, en.qi + en.kind.qiRegen*dt);
   switch(en.state){
     case 'idle':
       en.moving = false;
@@ -920,11 +939,9 @@ function updateEnemyAI(en, dt){
       if(distToPlayer <= en.kind.atkRange){ en.state='windup'; en.stateTimer=0.45; en.moving=false; break; }
       const dx=player.px-en.x, dy=player.py-en.y, len=Math.hypot(dx,dy)||1;
       en.facing = dx<0 ? 'left' : 'right';
-      en.moving = true;
-      const nx = en.x + dx/len*en.kind.speed*dt;
-      const ny = en.y + dy/len*en.kind.speed*dt;
-      if(!enemyBlocked(nx,en.y)) en.x=nx;
-      if(!enemyBlocked(en.x,ny)) en.y=ny;
+      const nx = Math.max(20, Math.min(WORLD_W-20, en.x + dx/len*en.kind.speed*dt));
+      const ny = Math.max(20, Math.min(WORLD_H-20, en.y + dy/len*en.kind.speed*dt));
+      if(!nearNPCZone(nx,ny)){ en.x=nx; en.y=ny; en.moving=true; } else { en.moving=false; }
       break;
     }
     case 'windup':
@@ -932,15 +949,19 @@ function updateEnemyAI(en, dt){
       en.stateTimer -= dt;
       if(en.stateTimer<=0){
         const d2 = Math.hypot(en.x-player.px, en.y-player.py);
+        const usingSkill = en.qi >= en.kind.skillQiCost;
+        if(usingSkill) en.qi -= en.kind.skillQiCost;
+        const dx=player.px-en.x, dy=player.py-en.y, len=Math.hypot(dx,dy)||1;
+        damageObstaclesInRange(en.x+dx/len*en.kind.atkRange*0.6, en.y+dy/len*en.kind.atkRange*0.6, en.kind.atkRange*0.5, 8, false);
         if(d2 <= en.kind.atkRange*1.3 && now>=invulnerableUntil){
-          const raw = en.kind.atk + Math.random()*4;
+          const raw = en.kind.atk*(usingSkill?1.5:1) + Math.random()*4;
           const dmg = Math.max(1, Math.round(raw - armorDef() - player.con*0.2));
           player.hp -= dmg;
           invulnerableUntil = now+300;
           lastHitFlash = now;
-          popFloater(player.px, player.py-18, '-'+dmg, '#e2564a', true);
-          triggerImpact(player.px, player.py-6, {color:'#e2564a', particles:9, shakeTime:0.18, shakeMag:7});
-          log(`${en.name}擊中了你，造成 ${dmg} 傷害。`);
+          popFloater(player.px, player.py-18, '-'+dmg, '#e2564a', usingSkill);
+          triggerImpact(player.px, player.py-6, {color:'#e2564a', particles:usingSkill?13:9, shakeTime:usingSkill?0.22:0.18, shakeMag:usingSkill?9:7});
+          log(`${en.name}${usingSkill?'施展了絕技，':''}擊中了你，造成 ${dmg} 傷害。`);
           if(player.hp<=0) onPlayerDown();
         } else if(d2 <= en.kind.atkRange*1.3){
           popFloater(player.px, player.py-18, '閃避', '#4f7d6c');
@@ -958,11 +979,9 @@ function updateEnemyAI(en, dt){
       if(len<4){ en.state='idle'; en.stateTimer=1; en.moving=false; break; }
       if(distToPlayer < en.kind.aggro*0.8){ en.state='chase'; break; }
       en.facing = dx<0 ? 'left' : 'right';
-      en.moving = true;
-      const nx = en.x + dx/len*en.kind.speed*dt;
-      const ny = en.y + dy/len*en.kind.speed*dt;
-      if(!enemyBlocked(nx,en.y)) en.x=nx;
-      if(!enemyBlocked(en.x,ny)) en.y=ny;
+      const nx = Math.max(20, Math.min(WORLD_W-20, en.x + dx/len*en.kind.speed*dt));
+      const ny = Math.max(20, Math.min(WORLD_H-20, en.y + dy/len*en.kind.speed*dt));
+      if(!nearNPCZone(nx,ny)){ en.x=nx; en.y=ny; en.moving=true; } else { en.moving=false; }
       break;
     }
   }
@@ -976,7 +995,9 @@ function onPlayerDown(){
   player.silver -= penalty;
   player.hp = Math.floor(player.maxHp*0.4);
   player.qi = Math.floor(player.maxQi*0.4);
-  player.px = 5*TILE+TILE/2; player.py = 13*TILE+TILE/2;
+  if(currentScene!=='village') setupSceneMap('village');
+  player.px = 700; player.py = 500;
+  player.scene = 'village';
   invulnerableUntil = performance.now()+2000;
   log(`你力竭倒地，被村人所救，損失了${penalty}銀兩，返回村中。`);
   updateHUD();
@@ -996,26 +1017,17 @@ function update(dt){
   else if(vy>0) player.facing='down';
   if(vx!==0 && vy!==0){ vx*=0.7071; vy*=0.7071; }
 
-  const nx = player.px + vx*SPEED*dt;
-  const ny = player.py + vy*SPEED*dt;
-  const margin = 16;
-  if(vx!==0 && !playerBlocked(nx+Math.sign(vx)*margin, player.py-margin) && !playerBlocked(nx+Math.sign(vx)*margin, player.py+margin)){
-    player.px = nx;
-  }
-  if(vy!==0 && !playerBlocked(player.px-margin, ny+Math.sign(vy)*margin) && !playerBlocked(player.px+margin, ny+Math.sign(vy)*margin)){
-    player.py = ny;
-  }
-  player.px = Math.max(TILE/2, Math.min(CANVAS_W-TILE/2, player.px));
-  player.py = Math.max(TILE/2, Math.min(CANVAS_H-TILE/2, player.py));
+  player.px = clampPlayerX(player.px + vx*SPEED*dt);
+  player.py = clampPlayerY(player.py + vy*SPEED*dt);
 
-  const curCol = Math.floor(player.px/TILE), curRow = Math.floor(player.py/TILE);
-  if(grid[curRow] && grid[curRow][curCol]==='G' && player.storyChapter>=1){
-    enterScene(currentScene==='village' ? 'scene2' : 'village');
-  }
+  currentGates.forEach(g=>{
+    if(g.locked && player.storyChapter<1) return;
+    if(Math.hypot(player.px-g.x, player.py-g.y) < 45) enterScene(g.to);
+  });
 
   enemies.forEach(en=>updateEnemyAI(en, dt));
 
-  const inSafeZone = Math.floor(player.px/TILE) < SAFE_ZONE_COL;
+  const inSafeZone = currentScene==='village';
   player.inSafeZone = inSafeZone;
   const regenMult = inSafeZone ? 2 : 1;
   const hpRegen = (1.0 + player.con*0.06) * regenMult;
@@ -1028,6 +1040,8 @@ function update(dt){
 
   particles.forEach(p=>{ p.x+=p.vx*dt; p.y+=p.vy*dt; p.vx*=0.9; p.vy*=0.9; p.life-=p.decay*dt; });
   particles = particles.filter(p=>p.life>0);
+  groundFX.forEach(g=>{ g.life -= dt*2.2; });
+  groundFX = groundFX.filter(g=>g.life>0);
   if(screenShake.time>0) screenShake.time = Math.max(0, screenShake.time-dt);
 
   if(player.hp<=0) onPlayerDown();
@@ -1037,13 +1051,83 @@ function update(dt){
 
 // ---------- Rendering ----------
 const ANIM_CONFIGS = {
-  punch:          {armLen:9,  swingRange:1.3, weapon:null,   trailArc:false, dual:false, burst:false},
-  staff_overhead: {armLen:11, swingRange:2.6, weapon:'staff',trailArc:true,  dual:false, burst:false},
-  palm_circle:    {armLen:9,  swingRange:2.2, weapon:null,   trailArc:true,  dual:false, burst:false},
-  sword_slash:    {armLen:10, swingRange:1.7, weapon:'sword',trailArc:true,  dual:false, burst:false},
-  staff_sweep:    {armLen:11, swingRange:2.0, weapon:'staff',trailArc:true,  dual:false, burst:false},
-  palm_slam:      {armLen:10, swingRange:1.0, weapon:null,   trailArc:false, dual:true,  burst:true},
+  punch:          {armLen:9,  swingRange:1.3, weapon:null,   trailArc:false, dual:false, burst:false, castShape:'spark'},
+  staff_overhead: {armLen:11, swingRange:2.6, weapon:'staff',trailArc:true,  dual:false, burst:false, castShape:'spark'},
+  palm_circle:    {armLen:9,  swingRange:2.2, weapon:null,   trailArc:true,  dual:false, burst:false, castShape:'ring'},
+  sword_slash:    {armLen:10, swingRange:1.7, weapon:'sword',trailArc:true,  dual:false, burst:false, castShape:'glint'},
+  staff_sweep:    {armLen:11, swingRange:2.0, weapon:'staff',trailArc:true,  dual:false, burst:false, castShape:'spark'},
+  palm_slam:      {armLen:10, swingRange:1.0, weapon:null,   trailArc:false, dual:true,  burst:true,  castShape:'ring'},
+  claw:           {armLen:8,  swingRange:1.6, weapon:null,   trailArc:false, dual:true,  burst:false, castShape:'spark'},
+  coil_slam:      {armLen:12, swingRange:2.4, weapon:null,   trailArc:true,  dual:true,  burst:true,  castShape:'ring'},
 };
+
+function drawSkillIcon(x,y,skillId,alpha){
+  if(!skillId) return;
+  ctx.save();
+  ctx.globalAlpha = alpha;
+  ctx.translate(x,y-10);
+  const r=14;
+  if(skillId==='taiji'||skillId==='liangyi'){
+    ctx.save();
+    ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.clip();
+    ctx.fillStyle='#e8dfc7'; ctx.fillRect(-r,-r,r*2,r*2);
+    ctx.fillStyle='#2b2621';
+    ctx.beginPath();
+    ctx.arc(0,0,r,Math.PI/2,Math.PI*1.5);
+    ctx.arc(0,-r/2,r/2,Math.PI*1.5,Math.PI/2,true);
+    ctx.arc(0,r/2,r/2,Math.PI/2,Math.PI*1.5,true);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#2b2621'; ctx.beginPath(); ctx.arc(0,-r/2,r/6,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle='#e8dfc7'; ctx.beginPath(); ctx.arc(0,r/2,r/6,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+    ctx.strokeStyle='#2b2621'; ctx.lineWidth=1.4; ctx.beginPath(); ctx.arc(0,0,r,0,Math.PI*2); ctx.stroke();
+  } else if(skillId==='gougun'||skillId==='xianglong'){
+    ctx.strokeStyle='#5a4a3a'; ctx.lineWidth=2.4;
+    ctx.beginPath(); ctx.moveTo(-r*0.7,-r*0.8); ctx.lineTo(r*0.7,r*0.8); ctx.stroke();
+    ctx.fillStyle='#8a7355';
+    ctx.beginPath(); ctx.ellipse(0,r*0.3,r*0.55,r*0.32,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(r*0.5,r*0.15); ctx.lineTo(r*0.75,r*0.05); ctx.lineTo(r*0.68,r*0.35); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-r*0.55,r*0.05); ctx.lineTo(-r*0.75,-r*0.15); ctx.lineTo(-r*0.4,-r*0.15); ctx.closePath(); ctx.fill();
+  } else if(skillId==='luohan'||skillId==='weituo'){
+    ctx.fillStyle='#e2c17e';
+    ctx.beginPath(); ctx.arc(0,-r*0.5,r*0.35,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(-r*0.6,r*0.6); ctx.quadraticCurveTo(0,-r*0.2,r*0.6,r*0.6); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#c98a3a';
+    ctx.beginPath(); ctx.arc(0,r*0.5,r*0.5,0,Math.PI,false); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function drawCastFlourish(s, castT, shape, color){
+  if(castT<=0 || castT>=1) return;
+  const r = (4+castT*11)*s;
+  ctx.save();
+  ctx.globalAlpha = (1-castT)*0.7;
+  if(shape==='ring'){
+    ctx.strokeStyle=color; ctx.lineWidth=1.6*s/4;
+    ctx.beginPath(); ctx.arc(0,-4*s, r, 0, Math.PI*2); ctx.stroke();
+    ctx.beginPath(); ctx.arc(0,-4*s, r*0.6, 0, Math.PI*2); ctx.stroke();
+  } else if(shape==='glint'){
+    ctx.strokeStyle=color; ctx.lineWidth=1.3*s/4;
+    for(let i=0;i<3;i++){
+      const a = castT*7+i*2.1;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a)*r*0.3, -4*s+Math.sin(a)*r*0.3);
+      ctx.lineTo(Math.cos(a)*r, -4*s+Math.sin(a)*r);
+      ctx.stroke();
+    }
+  } else {
+    ctx.fillStyle=color;
+    for(let i=0;i<5;i++){
+      const a = castT*8+i*1.26;
+      const rr = r*(0.5+0.5*Math.sin(castT*6+i));
+      ctx.beginPath();
+      ctx.arc(Math.cos(a)*rr, -4*s+Math.sin(a)*rr*0.6, 1.3*s, 0, Math.PI*2);
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+}
 
 function drawWeaponTip(s, weapon, fxColor){
   if(weapon==='staff'){
@@ -1091,6 +1175,29 @@ function drawArmWithFX(shoulderX, shoulderY, s, swing, cfg, robeColor, fxColor, 
   if(swing>0.15) drawWeaponTip(s, cfg.weapon, fxColor);
   else { ctx.fillStyle='#ffd9a6'; ctx.beginPath(); ctx.arc(0,(cfg.armLen-2)*s,2.2*s,0,Math.PI*2); ctx.fill(); ctx.stroke(); }
   ctx.restore();
+}
+
+function drawProp(s, type, robeColor){
+  if(!type) return;
+  ctx.strokeStyle='#1c1712'; ctx.lineWidth=1.4*s/4;
+  if(type==='beads'){
+    ctx.fillStyle='#c9a24b';
+    for(let i=0;i<6;i++){
+      const a = (i/6)*Math.PI*2;
+      ctx.beginPath(); ctx.arc(-7*s+Math.cos(a)*2.2*s, 2*s+Math.sin(a)*2.2*s, 0.9*s, 0, Math.PI*2); ctx.fill(); ctx.stroke();
+    }
+  } else if(type==='whisk'){
+    ctx.strokeStyle='#e8e0d0'; ctx.lineWidth=2.6*s/4;
+    ctx.beginPath(); ctx.moveTo(-9*s,-2*s); ctx.lineTo(-9*s,7*s); ctx.stroke();
+    for(let i=0;i<5;i++){
+      ctx.beginPath(); ctx.moveTo(-9*s, -2*s+i*0.6*s); ctx.lineTo(-11.5*s-i%2*s, -6*s-i*1.2*s); ctx.stroke();
+    }
+    ctx.strokeStyle='#1c1712';
+  } else if(type==='gourd'){
+    ctx.fillStyle='#c9a24b';
+    ctx.beginPath(); ctx.arc(7*s,3*s,2*s,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(7*s,6.5*s,2.8*s,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  }
 }
 
 function drawAccessory(s, type, robeColor){
@@ -1143,11 +1250,115 @@ function drawAccessory(s, type, robeColor){
   ctx.strokeStyle='#1c1712';
 }
 
+function drawWolfFigure(cx, cy, color, opts){
+  opts = opts||{};
+  const s = FIG_SCALE;
+  const facing = opts.facing||'right';
+  const flip = facing==='left' ? -1 : 1;
+  const walking = !!opts.walking;
+  const phase = opts.animTick||0;
+  const chargeT = opts.attackT||0;
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.beginPath(); ctx.ellipse(0,9*s,13*s,3*s,0,0,Math.PI*2); ctx.fill();
+  ctx.scale(flip,1);
+  ctx.lineJoin='round';
+  ctx.strokeStyle='#1c1712'; ctx.lineWidth=2*s/4;
+  const lp = walking ? Math.sin(phase*11)*3.4*s : 0;
+
+  // bushy tail (behind body)
+  ctx.fillStyle=lighten(color,-15);
+  ctx.beginPath();
+  ctx.moveTo(-11*s,-2*s);
+  ctx.quadraticCurveTo(-19*s,-2*s-lp*0.6, -17*s,-9*s);
+  ctx.quadraticCurveTo(-15*s,-4*s,-10*s,2*s);
+  ctx.closePath(); ctx.fill(); ctx.stroke();
+
+  // legs with small paws, spaced for a longer body
+  ctx.fillStyle=lighten(color,-25);
+  [[-9,lp],[-3,-lp],[5,lp],[10,-lp]].forEach(([lx,off])=>{
+    ctx.beginPath(); ctx.roundRect(lx*s,2.5*s+off*0.25,2.4*s,8*s,1.3*s); ctx.fill(); ctx.stroke();
+    ctx.fillStyle='#241d16';
+    ctx.beginPath(); ctx.ellipse(lx*s+1.2*s,10.5*s+off*0.25,1.9*s,1.2*s,0,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle=lighten(color,-25);
+  });
+
+  // lean elongated body
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.ellipse(0,0,13*s,5.2*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.fillStyle=lighten(color,22);
+  ctx.beginPath(); ctx.ellipse(1*s,2.4*s,8*s,2.6*s,0,0,Math.PI*2); ctx.fill();
+
+  // head with elongated snout
+  ctx.save();
+  ctx.translate(11*s+chargeT*4*s, -3.5*s);
+  ctx.fillStyle=color;
+  ctx.beginPath(); ctx.moveTo(-2*s,-5*s); ctx.lineTo(-1*s,-9.5*s); ctx.lineTo(1.5*s,-5.5*s); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(2.5*s,-5*s); ctx.lineTo(4.5*s,-9.5*s); ctx.lineTo(6*s,-5.5*s); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = opts.flash ? '#fff2c0' : color;
+  ctx.beginPath(); ctx.ellipse(0,0,5.6*s,4.2*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(3.5*s,0.5*s); ctx.lineTo(9.5*s,1.2*s); ctx.lineTo(3.5*s,3*s); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#241d16';
+  ctx.beginPath(); ctx.ellipse(8*s,1.2*s,1*s,0.6*s,0,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#ffcf3a';
+  ctx.beginPath(); ctx.arc(2.8*s,-0.8*s,1.1*s,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#1c1712';
+  ctx.beginPath(); ctx.arc(3*s,-0.8*s,0.5*s,0,Math.PI*2); ctx.fill();
+  ctx.restore();
+  ctx.restore();
+}
+
+function drawPythonFigure(cx, cy, color, opts){
+  opts = opts||{};
+  const s = FIG_SCALE;
+  const facing = opts.facing||'right';
+  const flip = facing==='left' ? -1 : 1;
+  const phase = opts.animTick||0;
+  const chargeT = opts.attackT||0;
+  ctx.save();
+  ctx.translate(cx,cy);
+  ctx.fillStyle='rgba(0,0,0,.3)';
+  ctx.beginPath(); ctx.ellipse(0,7*s,16*s,3*s,0,0,Math.PI*2); ctx.fill();
+  ctx.scale(flip,1);
+  ctx.lineJoin='round';
+  ctx.strokeStyle='#1c1712'; ctx.lineWidth=1.8*s/4;
+  const wave = Math.sin(phase*4)*2.2*s;
+  ctx.fillStyle = opts.flash ? '#fff2c0' : color;
+  const segs = [[-19,3,2.2],[-15,1.6+wave*0.2,3.0],[-10,wave*0.4,3.7],[-4,-wave*0.2,4.3],[3,wave*0.5,4.6],[9,2-wave*0.4,4.2]];
+  segs.forEach(([sx,sy,r])=>{
+    ctx.beginPath(); ctx.ellipse(sx*s, sy*s, r*s, r*0.72*s, 0, 0, Math.PI*2); ctx.fill();
+  });
+  ctx.strokeStyle='rgba(0,0,0,.3)'; ctx.lineWidth=1.4*s/4;
+  for(let i=0;i<segs.length-1;i++){
+    const [ax,ay,ar] = segs[i], [bx,by,br] = segs[i+1];
+    const mx=(ax+bx)/2*s, my=(ay+by)/2*s;
+    const r = Math.max(ar,br)*0.75*s;
+    ctx.beginPath(); ctx.ellipse(mx,my,r*0.35,r,0,0,Math.PI*2); ctx.stroke();
+  }
+  ctx.strokeStyle='#1c1712';
+  ctx.save();
+  ctx.translate(13.5*s+chargeT*5*s, segs[segs.length-1][1]*s-1.5*s);
+  ctx.fillStyle = opts.flash ? '#fff2c0' : color;
+  ctx.beginPath(); ctx.ellipse(0,0,5.6*s,4*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.moveTo(3*s,1*s); ctx.lineTo(8*s,1.6*s); ctx.lineTo(3*s,3*s); ctx.closePath(); ctx.fill(); ctx.stroke();
+  ctx.fillStyle='#ffcf3a';
+  ctx.beginPath(); ctx.arc(2*s,-1*s,1.1*s,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle='#1c1712';
+  ctx.beginPath(); ctx.arc(2.2*s,-1*s,0.5*s,0,Math.PI*2); ctx.fill();
+  if(chargeT>0.2){
+    ctx.strokeStyle='#e2564a'; ctx.lineWidth=1*s/4;
+    ctx.beginPath(); ctx.moveTo(7*s,1.8*s); ctx.lineTo(11*s,1.8*s); ctx.stroke();
+  }
+  ctx.restore();
+  ctx.restore();
+}
+
 function drawInkFigure(cx, cy, robeColor, opts){
   opts = opts||{};
   const BASE = 1;
   const s = BASE*FIG_SCALE;
-  const compensation = 11*BASE*(FIG_SCALE-1);
+  const compensation = 22*BASE*(FIG_SCALE-1);
   const facing = opts.facing || 'down';
   const walking = !!opts.walking;
   const attackT = opts.attackT || 0;
@@ -1161,7 +1372,7 @@ function drawInkFigure(cx, cy, robeColor, opts){
   ctx.translate(cx, cy - compensation);
   ctx.fillStyle='rgba(0,0,0,.32)';
   ctx.beginPath();
-  ctx.ellipse(0, 12*s, 7.5*s, 2.6*s, 0,0,Math.PI*2);
+  ctx.ellipse(0, 22*s, 8*s, 2.8*s, 0,0,Math.PI*2);
   ctx.fill();
 
   const bob = walking ? Math.abs(Math.sin(phase*9))*1.4*s : 0;
@@ -1173,16 +1384,21 @@ function drawInkFigure(cx, cy, robeColor, opts){
   ctx.lineWidth=2.4*s/4;
 
   const bodyFill = opts.flash ? '#fff2c0' : robeColor;
+  const castT = attackT>0 ? Math.min(1, attackT/0.4) : 0;
+  drawCastFlourish(s, castT, cfg.castShape, fxColor);
 
   if(facing==='down' || facing==='up'){
     // ---------- FRONT / BACK VIEW ----------
     const legSwing = walking ? Math.sin(phase*9)*2.6*s : 0;
-    ctx.fillStyle='#3a3028';
-    ctx.beginPath(); ctx.roundRect(-6*s,4*s+legSwing,4.5*s,7*s,2*s); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.roundRect(1.5*s,4*s-legSwing,4.5*s,7*s,2*s); ctx.fill(); ctx.stroke();
-    ctx.fillStyle='#241d16';
-    ctx.beginPath(); ctx.ellipse(-3.75*s,11*s+legSwing,2.6*s,1.6*s,0,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(3.75*s,11*s-legSwing,2.6*s,1.6*s,0,0,Math.PI*2); ctx.fill();
+    [-1,1].forEach(side=>{
+      const lx = side*3.75*s, sw = side>0 ? -legSwing : legSwing;
+      ctx.fillStyle='#4a3a2c';
+      ctx.beginPath(); ctx.roundRect(lx-2.4*s,7*s+sw*0.3,4.8*s,6*s,1.6*s); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#3a3028';
+      ctx.beginPath(); ctx.roundRect(lx-2.2*s,13*s+sw,4.4*s,6*s,1.6*s); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#241d16';
+      ctx.beginPath(); ctx.ellipse(lx+side*0.6*s,20.5*s+sw,2.8*s,1.7*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    });
 
     if(!cfg.dual){
       ctx.fillStyle=robeColor;
@@ -1195,32 +1411,66 @@ function drawInkFigure(cx, cy, robeColor, opts){
     ctx.beginPath();
     ctx.roundRect(-8*s,-8*s,16*s,15*s,4*s);
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle='rgba(0,0,0,.08)';
-    ctx.beginPath(); ctx.roundRect(-8*s,3*s,16*s,4*s,3*s); ctx.fill();
+    if(facing==='up'){
+      ctx.strokeStyle='rgba(0,0,0,.18)'; ctx.lineWidth=1.4*s/4;
+      ctx.beginPath(); ctx.moveTo(0,-7*s); ctx.lineTo(0,3*s); ctx.stroke();
+      ctx.fillStyle=lighten(robeColor,-30);
+      ctx.beginPath(); ctx.roundRect(-2.6*s,-2*s,5.2*s,3.4*s,1.4*s); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle='#e8dfc7'; ctx.lineWidth=1.2*s/4;
+      ctx.beginPath(); ctx.moveTo(-2*s,0.5*s); ctx.lineTo(-4.5*s,4*s); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(2*s,0.5*s); ctx.lineTo(4.5*s,4*s); ctx.stroke();
+      ctx.strokeStyle='#1c1712';
+    } else {
+      ctx.fillStyle='rgba(255,255,255,.10)';
+      ctx.beginPath(); ctx.roundRect(-6*s,-6.5*s,6*s,7*s,3*s); ctx.fill();
+    }
+    ctx.fillStyle='rgba(0,0,0,.10)';
+    ctx.beginPath(); ctx.roundRect(-8*s,4*s,16*s,3*s,2*s); ctx.fill();
+    ctx.fillStyle=lighten(robeColor,-40);
+    ctx.beginPath(); ctx.roundRect(-8.2*s,0.5*s,16.4*s,2.6*s,1.3*s); ctx.fill(); ctx.stroke();
 
+    function faceOutlinePath(){
+      ctx.beginPath();
+      ctx.moveTo(0,-25.6*s);
+      ctx.quadraticCurveTo(7.6*s,-25.6*s, 7.6*s,-17*s);
+      ctx.quadraticCurveTo(7.6*s,-10*s, 4*s,-8.5*s);
+      ctx.quadraticCurveTo(2*s,-8*s, 0,-8*s);
+      ctx.quadraticCurveTo(-2*s,-8*s,-4*s,-8.5*s);
+      ctx.quadraticCurveTo(-7.6*s,-10*s,-7.6*s,-17*s);
+      ctx.quadraticCurveTo(-7.6*s,-25.6*s,0,-25.6*s);
+      ctx.closePath();
+    }
     ctx.fillStyle='#ffd9a6';
-    ctx.beginPath();
-    ctx.arc(0,-17*s,8.5*s,0,Math.PI*2);
+    ctx.beginPath(); ctx.ellipse(-7.6*s,-16*s,1.6*s,2.4*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(7.6*s,-16*s,1.6*s,2.4*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    faceOutlinePath();
     ctx.fill(); ctx.stroke();
 
     if(facing==='up'){
-      ctx.fillStyle=robeColor;
-      ctx.beginPath(); ctx.arc(0,-17*s,8.5*s,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#241a12';
+      faceOutlinePath();
+      ctx.fill(); ctx.stroke();
       ctx.fillStyle='rgba(0,0,0,.15)';
       ctx.beginPath(); ctx.ellipse(0,-17*s,3*s,5.5*s,0,0,Math.PI*2); ctx.fill();
     } else {
-      ctx.fillStyle=robeColor;
+      ctx.fillStyle='#241a12';
       ctx.beginPath();
-      ctx.arc(0,-17*s,8.5*s,Math.PI*1.08,Math.PI*1.92);
-      ctx.lineTo(8.5*s,-20*s);
-      ctx.lineTo(-8.5*s,-20*s);
+      ctx.ellipse(0,-17*s,7.6*s,8.6*s,0,Math.PI*1.05,Math.PI*1.95);
+      ctx.lineTo(7.6*s,-21*s);
+      ctx.lineTo(-7.6*s,-21*s);
       ctx.closePath();
       ctx.fill(); ctx.stroke();
+      ctx.strokeStyle='#241a12'; ctx.lineWidth=1.9*s/4;
+      ctx.beginPath(); ctx.moveTo(-7*s,-13.5*s); ctx.quadraticCurveTo(-8.6*s,-7*s,-6.8*s,-2*s); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(7*s,-13.5*s); ctx.quadraticCurveTo(8.6*s,-7*s,6.8*s,-2*s); ctx.stroke();
+      ctx.strokeStyle='#1c1712'; ctx.lineWidth=2.4*s/4;
       ctx.fillStyle='#1c1712';
       ctx.beginPath(); ctx.arc(-3*s,-16*s,1.4*s,0,Math.PI*2); ctx.fill();
       ctx.beginPath(); ctx.arc(3*s,-16*s,1.4*s,0,Math.PI*2); ctx.fill();
+      ctx.strokeStyle='#c9935f'; ctx.lineWidth=1*s/4;
+      ctx.beginPath(); ctx.moveTo(-0.3*s,-15.5*s); ctx.lineTo(-1*s,-12.3*s); ctx.lineTo(0.4*s,-12*s); ctx.stroke();
       ctx.strokeStyle='#c76a4a'; ctx.lineWidth=1*s/4;
-      ctx.beginPath(); ctx.arc(0,-11.5*s,2.4*s,0.15,Math.PI-0.15); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0,-11*s,2.4*s,0.15,Math.PI-0.15); ctx.stroke();
       ctx.strokeStyle='#1c1712';
     }
 
@@ -1237,62 +1487,83 @@ function drawInkFigure(cx, cy, robeColor, opts){
       ctx.globalAlpha = 1;
     }
     drawAccessory(s, opts.accessory, robeColor);
+    drawProp(s, opts.prop, robeColor);
   } else {
     // ---------- SIDE VIEW (canonical: facing right; mirrored via ctx.scale for left) ----------
-    const stride = walking ? Math.sin(phase*9)*4*s : 0;
+    const stride = walking ? Math.sin(phase*9)*3.5*s : 0;
+    ctx.fillStyle='#4a3a2c';
+    ctx.beginPath(); ctx.roundRect(-2.2*s+stride*0.4,7*s,4.4*s,6*s,1.6*s); ctx.fill(); ctx.stroke();
     ctx.fillStyle='#3a3028';
-    ctx.beginPath(); ctx.roundRect(-3*s+stride,4*s,4*s,7*s,2*s); ctx.fill(); ctx.stroke();
-    ctx.beginPath(); ctx.roundRect(-1*s-stride,4*s,4*s,7*s,2*s); ctx.fill(); ctx.stroke();
+    ctx.beginPath(); ctx.roundRect(-2*s+stride,13*s,4*s,6*s,1.6*s); ctx.fill(); ctx.stroke();
     ctx.fillStyle='#241d16';
-    ctx.beginPath(); ctx.ellipse(0.5*s+stride,11*s,2.8*s,1.6*s,0,0,Math.PI*2); ctx.fill();
-    ctx.beginPath(); ctx.ellipse(1*s-stride,11*s,2.8*s,1.6*s,0,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.ellipse(1*s+stride,20.5*s,3*s,1.7*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
 
     // back arm hint (behind torso)
     if(!cfg.dual){
       ctx.fillStyle=lighten(robeColor,-18);
-      ctx.beginPath(); ctx.roundRect(-4*s,-5*s,3.4*s,8*s,2*s); ctx.fill(); ctx.stroke();
+      ctx.beginPath(); ctx.roundRect(-3*s,-5*s,3*s,8*s,2*s); ctx.fill(); ctx.stroke();
     }
 
     ctx.fillStyle=bodyFill;
     ctx.beginPath();
-    ctx.roundRect(-7*s,-8*s,14*s,15*s,4*s);
+    ctx.roundRect(-6*s,-8*s,12*s,15*s,4*s);
     ctx.fill(); ctx.stroke();
-    ctx.fillStyle='rgba(0,0,0,.08)';
-    ctx.beginPath(); ctx.roundRect(-7*s,3*s,14*s,4*s,3*s); ctx.fill();
+    ctx.fillStyle='rgba(255,255,255,.10)';
+    ctx.beginPath(); ctx.roundRect(-4.5*s,-6.5*s,4.5*s,7*s,3*s); ctx.fill();
+    ctx.fillStyle='rgba(0,0,0,.10)';
+    ctx.beginPath(); ctx.roundRect(-6*s,4*s,12*s,3*s,2*s); ctx.fill();
+    ctx.fillStyle=lighten(robeColor,-40);
+    ctx.beginPath(); ctx.roundRect(-6.2*s,0.5*s,12.4*s,2.6*s,1.3*s); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle='rgba(0,0,0,.15)'; ctx.lineWidth=1.4*s/4;
+    ctx.beginPath(); ctx.moveTo(-6*s,-3*s); ctx.lineTo(6*s,-4*s); ctx.stroke();
+    ctx.strokeStyle='#1c1712'; ctx.lineWidth=2.4*s/4;
 
-    // head (side profile with nose bump)
+    // head (side profile, nose blended into a single face outline)
     ctx.fillStyle='#ffd9a6';
     ctx.beginPath();
-    ctx.arc(0,-17*s,8*s,0,Math.PI*2);
-    ctx.fill(); ctx.stroke();
-    ctx.beginPath();
-    ctx.moveTo(6.5*s,-15.5*s);
-    ctx.lineTo(9.5*s,-14*s);
-    ctx.lineTo(6.5*s,-12.5*s);
+    ctx.moveTo(9.3*s,-17*s);
+    ctx.lineTo(7*s,-13*s);
+    ctx.lineTo(6.2*s,-10*s);
+    ctx.lineTo(0,-9.3*s);
+    ctx.lineTo(-6*s,-11.5*s);
+    ctx.lineTo(-8*s,-17*s);
+    ctx.lineTo(-6*s,-22.5*s);
+    ctx.lineTo(0,-25*s);
+    ctx.lineTo(6.5*s,-21.8*s);
     ctx.closePath();
     ctx.fill(); ctx.stroke();
 
-    ctx.fillStyle=robeColor;
+    ctx.fillStyle='#ffd9a6';
+    ctx.beginPath(); ctx.ellipse(-5.6*s,-16*s,1.8*s,2.6*s,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+
+    ctx.fillStyle='#241a12';
     ctx.beginPath();
-    ctx.arc(0,-17*s,8*s,Math.PI*0.92,Math.PI*1.85);
-    ctx.lineTo(6*s,-24.5*s);
-    ctx.lineTo(-8*s,-22*s);
+    ctx.moveTo(6.5*s,-21.8*s);
+    ctx.lineTo(0,-25*s);
+    ctx.lineTo(-6*s,-22.5*s);
+    ctx.lineTo(-8*s,-17*s);
+    ctx.quadraticCurveTo(-8.6*s,-9*s,-5*s,-2*s);
+    ctx.quadraticCurveTo(-2*s,-15*s,3*s,-19*s);
+    ctx.quadraticCurveTo(6*s,-20.5*s,6.5*s,-21.8*s);
     ctx.closePath();
     ctx.fill(); ctx.stroke();
 
     ctx.fillStyle='#1c1712';
     ctx.beginPath(); ctx.arc(3.5*s,-17.5*s,1.3*s,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#c76a4a'; ctx.lineWidth=1*s/4;
+    ctx.beginPath(); ctx.arc(4*s,-11.5*s,1.6*s,0.2,Math.PI*0.75); ctx.stroke();
+    ctx.strokeStyle='#1c1712';
 
     if(cfg.dual){
-      drawArmWithFX(6*s,-4*s, s, swing, cfg, robeColor, fxColor, false);
-      drawArmWithFX(-2*s,-4*s, s, swing*0.7, cfg, robeColor, fxColor, false);
+      drawArmWithFX(1*s,-4*s, s, swing, cfg, robeColor, fxColor, false);
+      drawArmWithFX(-3*s,-4*s, s, swing*0.7, cfg, robeColor, fxColor, false);
     } else {
-      drawArmWithFX(6*s,-4*s, s, swing, cfg, robeColor, fxColor, false);
+      drawArmWithFX(1*s,-4*s, s, swing, cfg, robeColor, fxColor, false);
     }
     if(cfg.burst && swing>0.05){
       ctx.globalAlpha = swing*0.6;
       ctx.strokeStyle = fxColor; ctx.lineWidth=3*s/4;
-      ctx.beginPath(); ctx.arc(4*s,-2*s, swing*15*s, 0, Math.PI*2); ctx.stroke();
+      ctx.beginPath(); ctx.arc(0*s,-2*s, swing*15*s, 0, Math.PI*2); ctx.stroke();
       ctx.globalAlpha = 1;
     }
   }
@@ -1307,19 +1578,18 @@ function lighten(hex, amt){
 }
 
 function nearbyNPC(){
-  const pc = Math.floor(player.px/TILE), pr = Math.floor(player.py/TILE);
-  let best=null, bestD=99;
+  let best=null, bestD=90;
   NPCS.forEach(n=>{
-    const d = Math.abs(n.x-pc)+Math.abs(n.y-pr);
-    if(d<=1 && d<bestD){ bestD=d; best=n; }
+    const d = Math.hypot(n.x-player.px, n.y-player.py);
+    if(d<bestD){ bestD=d; best=n; }
   });
   return best;
 }
 
 let camX=0, camY=0;
 function updateCamera(){
-  camX = Math.max(0, Math.min(CANVAS_W-VIEW_W, player.px-VIEW_W/2));
-  camY = Math.max(0, Math.min(CANVAS_H-VIEW_H, player.py-VIEW_H/2));
+  camX = Math.max(0, Math.min(WORLD_W-VIEW_W, player.px-VIEW_W/2));
+  camY = Math.max(0, Math.min(WORLD_H-VIEW_H, player.py-VIEW_H/2));
 }
 function render(){
   updateCamera();
@@ -1331,11 +1601,51 @@ function render(){
   }
   ctx.translate(-camX, -camY);
   ctx.drawImage(bgCanvas,0,0);
-  const FIGURE_TOP = 78; // px above anchor point that the figure's head reaches (2x scale)
+
+  groundFX.forEach(g=>{
+    const grow = 1 + (1-g.life)*0.5;
+    ctx.globalAlpha = Math.max(0,g.life)*0.55;
+    ctx.strokeStyle = g.color;
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.ellipse(g.x, g.y, g.radius*grow, g.radius*grow*0.45, 0, 0, Math.PI*2);
+    ctx.stroke();
+    if(g.mode==='aoe'){
+      ctx.globalAlpha = Math.max(0,g.life)*0.18;
+      ctx.fillStyle = g.color;
+      ctx.beginPath();
+      ctx.ellipse(g.x, g.y, g.radius*grow, g.radius*grow*0.45, 0, 0, Math.PI*2);
+      ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    if(g.iconId) drawSkillIcon(g.x, g.y, g.iconId, Math.max(0,g.life));
+  });
+  const FIGURE_TOP = 84; // px above anchor point that the figure's head reaches (longer-legged proportions)
+
+  obstacles.forEach(ob=>{
+    ctx.fillStyle='rgba(0,0,0,.25)';
+    ctx.beginPath(); ctx.ellipse(ob.x,ob.y+14,16,5,0,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle='#2c1c10'; ctx.lineWidth=2;
+    if(ob.kind==='crate'){
+      ctx.fillStyle='#8a5a2c';
+      ctx.fillRect(ob.x-14,ob.y-14,28,28); ctx.strokeRect(ob.x-14,ob.y-14,28,28);
+      ctx.beginPath(); ctx.moveTo(ob.x-14,ob.y-14); ctx.lineTo(ob.x+14,ob.y+14); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(ob.x+14,ob.y-14); ctx.lineTo(ob.x-14,ob.y+14); ctx.stroke();
+    } else {
+      ctx.fillStyle='#8a8578';
+      ctx.beginPath(); ctx.ellipse(ob.x,ob.y,15,12,0,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.fillStyle='#726d60';
+      ctx.beginPath(); ctx.ellipse(ob.x-4,ob.y-3,6,4,0,0,Math.PI*2); ctx.fill();
+    }
+    if(ob.hp<ob.maxHp){
+      ctx.fillStyle='rgba(0,0,0,.5)'; ctx.fillRect(ob.x-16,ob.y-24,32,4);
+      ctx.fillStyle='#c9a24b'; ctx.fillRect(ob.x-16,ob.y-24,32*Math.max(0,ob.hp/ob.maxHp),4);
+    }
+  });
 
   NPCS.forEach(n=>{
-    const cx = n.x*TILE+TILE/2, cy = n.y*TILE+TILE/2;
-    drawInkFigure(cx, cy, n.color, {facing:'down', accessory:n.accessory});
+    const cx = n.x, cy = n.y;
+    drawInkFigure(cx, cy, n.color, {facing:'down', accessory:n.accessory, prop:n.prop});
     ctx.font='12px "Noto Serif TC", serif';
     const w = ctx.measureText(n.name).width;
     ctx.fillStyle='rgba(40,30,20,.6)';
@@ -1347,26 +1657,27 @@ function render(){
   enemies.forEach(en=>{
     const flash = en.state==='windup';
     const chargeT = en.state==='windup' ? Math.max(0, 1-(en.stateTimer/0.45)) : 0;
-    drawInkFigure(en.x, en.y, en.color, {flash, facing:en.facing||'right', walking:!!en.moving, animTick:animTick+en.uid, attackT:chargeT});
+    const drawOpts = {flash, facing:en.facing||'right', walking:!!en.moving, animTick:animTick+en.uid, attackT:chargeT, attackAnim:en.kind.atkAnim, attackFx:en.kind.atkFx};
+    if(en.kind.bodyType==='wolf') drawWolfFigure(en.x, en.y, en.color, drawOpts);
+    else if(en.kind.bodyType==='python') drawPythonFigure(en.x, en.y, en.color, drawOpts);
+    else drawInkFigure(en.x, en.y, en.color, drawOpts);
     const bw=30, bh=5;
     ctx.fillStyle='rgba(0,0,0,.5)';
     ctx.fillRect(en.x-bw/2, en.y-FIGURE_TOP+9, bw, bh);
     ctx.fillStyle='#c14a3e';
     ctx.fillRect(en.x-bw/2, en.y-FIGURE_TOP+9, bw*Math.max(0,en.hp/en.maxHp), bh);
+    ctx.fillStyle='rgba(0,0,0,.5)';
+    ctx.fillRect(en.x-bw/2, en.y-FIGURE_TOP+15, bw, 3);
+    ctx.fillStyle='#5b8fd6';
+    ctx.fillRect(en.x-bw/2, en.y-FIGURE_TOP+15, bw*Math.max(0,en.qi/en.maxQi), 3);
     ctx.font='11px "Noto Serif TC", serif';
     ctx.fillStyle='#2b2621';
     ctx.fillStyle='rgba(40,30,20,.6)';
-    const nw = ctx.measureText(en.name).width;
+    const tag = `Lv.${en.kind.level} ${en.name}`;
+    const nw = ctx.measureText(tag).width;
     ctx.fillRect(en.x-nw/2-4, en.y-FIGURE_TOP-2, nw+8, 15);
     ctx.fillStyle='#f0e6c8';
-    ctx.fillText(en.name, en.x-nw/2, en.y-FIGURE_TOP+10);
-    if(en.uid===focusTarget){
-      ctx.strokeStyle='#a3352c';
-      ctx.lineWidth=2.5;
-      ctx.beginPath();
-      ctx.arc(en.x, en.y-10, 24, 0, Math.PI*2);
-      ctx.stroke();
-    }
+    ctx.fillText(tag, en.x-nw/2, en.y-FIGURE_TOP+10);
   });
 
   const now = performance.now();
@@ -1382,13 +1693,13 @@ function render(){
     const t = `E 與 ${n.name.split(' ')[0]} 交談`;
     const w = ctx.measureText(t).width;
     ctx.fillStyle='rgba(240,230,200,.85)';
-    ctx.fillRect(player.px-w/2-4, player.py+14, w+8, 16);
+    ctx.fillRect(player.px-w/2-4, player.py+26, w+8, 16);
     ctx.fillStyle='#2b2621';
-    ctx.fillText(t, player.px-w/2, player.py+26);
+    ctx.fillText(t, player.px-w/2, player.py+38);
   } else if(player.storyChapter<1){
-    const gp = GATE_POS[currentScene];
-    const gx = gp.x*TILE+TILE/2, gy = gp.y*TILE+TILE/2;
-    if(Math.hypot(player.px-gx, player.py-gy) < 110){
+    const lockedGate = currentGates.find(g=>g.locked);
+    if(lockedGate && Math.hypot(player.px-lockedGate.x, player.py-lockedGate.y) < 220){
+      const gx=lockedGate.x, gy=lockedGate.y;
       const t = '此路封閉，似乎需先查明此地';
       ctx.font='11px "Noto Serif TC", serif';
       const w = ctx.measureText(t).width;
@@ -1555,13 +1866,24 @@ function renderDialogBody(npc){
       dlgText.textContent = STORY_ELDER_LATER;
     }
   } else if(npc.type==='story2'){
-    dlgText.textContent = player.storyChapter<2 ? STORY_2_TEXT : '邊城不太平，少俠自己多加小心。';
     if(player.storyChapter<2){
+      dlgText.textContent = STORY_2_TEXT;
       dlgChoices.appendChild(choiceBtn('願意一戰，證明自己', '', ()=>{
         player.storyChapter = 2;
-        log('【第二章：邊城風雲】故事待續……更多劇情將在後續版本展開。');
+        player.skillPoints += 1;
+        log('【第二章：邊城風雲】沈孤答應助你一臂之力，你獲得1點武學點。');
         closeDialog();
       }));
+    } else if(player.storyChapter===2){
+      dlgText.textContent = STORY_3_TEXT + '\n\n' + STORY_END_TEASE;
+      dlgChoices.appendChild(choiceBtn('多謝相告，我會小心行事', '', ()=>{
+        player.storyChapter = 3;
+        player.silver += 50;
+        log('【第三章：黑龍會】你獲得了一枚令牌，沈孤資助了你50兩銀子。');
+        closeDialog();
+      }));
+    } else {
+      dlgText.textContent = STORY_3_LATER + '\n\n' + STORY_END_TEASE;
     }
   }
 }
@@ -1622,6 +1944,29 @@ function updateHotbarUI(){
 const attrList = document.getElementById('attrList');
 const skillList = document.getElementById('skillList');
 const invList = document.getElementById('invList');
+
+const panelOverlay = document.getElementById('panelOverlay');
+document.querySelectorAll('.panel-tab').forEach(tab=>{
+  tab.addEventListener('click', ()=>{
+    const isOpenSame = panelOverlay.classList.contains('show') && tab.classList.contains('active');
+    document.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
+    document.querySelectorAll('.panel-body').forEach(p=>p.style.display='none');
+    if(isOpenSame){
+      panelOverlay.classList.remove('show');
+      inputLocked = false;
+      return;
+    }
+    tab.classList.add('active');
+    document.getElementById('panel-'+tab.dataset.panel).style.display='block';
+    panelOverlay.classList.add('show');
+    inputLocked = true;
+  });
+});
+document.getElementById('panelCloseBtn').onclick = ()=>{
+  panelOverlay.classList.remove('show');
+  document.querySelectorAll('.panel-tab').forEach(t=>t.classList.remove('active'));
+  inputLocked = false;
+};
 
 function refreshSidebar(){
   document.getElementById('freePts').textContent = player.freePoints;
@@ -1826,7 +2171,7 @@ document.getElementById('btnStartLoad').onclick = async ()=>{
 
 // ---------- Init ----------
 document.getElementById('versionTag').textContent = GAME_VERSION;
-document.getElementById('footerCredit').textContent = `水墨古風 · 即時戰鬥 · 自由學派、自由屬性，無職業限制 · ${GAME_VERSION}`;
+document.getElementById('footerCredit').textContent = `俯視地圖 · 即時戰鬥 · 自由學派、自由屬性，無職業限制 · ${GAME_VERSION}`;
 inputLocked = true;
 refreshSidebar();
 loadKeyBindings();
