@@ -300,7 +300,7 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 (function(){
 
 // ---------- Constants ----------
-const GAME_VERSION = 'v3.0.0';
+const GAME_VERSION = 'v3.2.0';
 const FIG_SCALE = 2; // character visual size multiplier
 const VIEW_W=672, VIEW_H=448; // fixed on-screen viewport (camera follows the player in the larger world)
 
@@ -1686,59 +1686,77 @@ function lighten(hex, amt){
   return `rgb(${r},${g},${b})`;
 }
 
-// ---------- Sprite baking: renders each pose to an offscreen canvas once, exports a real
-// image (data URL), and the game reads/draws THAT image every frame instead of re-running
-// the vector drawing code. To swap in real hand-drawn art later, replace spriteCache[key].src
-// with a URL to your own image of the same pose before bakeAllSprites() resolves.
+// ---------- Sprite loading: reads ONE combined sprite-sheet image hosted alongside this
+// page ("spritesheet.png" next to index.html) and slices out each pose with drawImage's
+// source-rect form — this is the actual image-based rendering pipeline. The key order below
+// must exactly match the order the sheet was generated in (8 columns, row-major). If the
+// sheet fails to load, poses are generated on the fly from the original vector drawing as a
+// safety-net fallback so the game still runs.
+const SPRITESHEET_URL = 'spritesheet.png';
 const SPRITE_SIZE = 220, SPRITE_ANCHOR_X = 110, SPRITE_ANCHOR_Y = 150;
+const SHEET_COLS = 8;
 const spriteCache = {};
-function bakeSprite(key, drawFn){
+const spriteDrawFns = {};
+const spriteKeyOrder = [];
+let sheetImage = null, sheetLoaded = false;
+function registerSprite(key, drawFn){ spriteDrawFns[key] = drawFn; spriteKeyOrder.push(key); }
+function bakeFallback(key){
+  if(spriteCache[key]) return spriteCache[key];
   const bakeCanvas = document.createElement('canvas');
   bakeCanvas.width = SPRITE_SIZE; bakeCanvas.height = SPRITE_SIZE;
   const bakeCtx = bakeCanvas.getContext('2d');
   const savedCtx = ctx;
   ctx = bakeCtx;
-  try{ drawFn(SPRITE_ANCHOR_X, SPRITE_ANCHOR_Y); }catch(err){ console.error('bake failed for', key, err); }
+  try{ spriteDrawFns[key](SPRITE_ANCHOR_X, SPRITE_ANCHOR_Y); }catch(err){ console.error('fallback bake failed for', key, err); }
   ctx = savedCtx;
-  const img = new Image();
-  const p = new Promise(resolve=>{ img.onload=resolve; img.onerror=resolve; });
-  img.src = bakeCanvas.toDataURL();
-  spriteCache[key] = img;
-  return p;
+  spriteCache[key] = bakeCanvas;
+  return bakeCanvas;
+}
+function loadSpriteSheet(){
+  return new Promise(resolve=>{
+    const img = new Image();
+    img.onload = ()=>{ sheetImage=img; sheetLoaded=true; resolve(); };
+    img.onerror = ()=>{ console.warn('sprite sheet not found, using generated fallback poses'); sheetLoaded=false; resolve(); };
+    img.src = SPRITESHEET_URL;
+  });
 }
 function bakeAllSprites(){
-  const promises = [];
   const facings4 = ['down','up','left','right'];
   const facings2 = ['left','right'];
 
   facings4.forEach(facing=>{
-    promises.push(bakeSprite(`player_idle_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, accessory:'headband'})));
-    promises.push(bakeSprite(`player_walk1_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, walking:true, animTick:0, accessory:'headband'})));
-    promises.push(bakeSprite(`player_walk2_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, walking:true, animTick:0.35, accessory:'headband'})));
-    promises.push(bakeSprite(`player_attack_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, attackT:0.5, attackAnim:'punch', attackFx:'#f0e0c0', accessory:'headband'})));
+    registerSprite(`player_idle_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, accessory:'headband'}));
+    registerSprite(`player_walk1_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, walking:true, animTick:0, accessory:'headband'}));
+    registerSprite(`player_walk2_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, walking:true, animTick:0.35, accessory:'headband'}));
+    registerSprite(`player_attack_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, attackT:0.5, attackAnim:'punch', attackFx:'#f0e0c0', accessory:'headband'}));
   });
 
   ENEMY_DEFS.forEach(def=>{
     const drawFn = def.bodyType==='wolf' ? drawWolfFigure : def.bodyType==='python' ? drawPythonFigure : drawInkFigure;
     facings2.forEach(facing=>{
-      promises.push(bakeSprite(`enemy_${def.id}_idle_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing})));
-      promises.push(bakeSprite(`enemy_${def.id}_walk1_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, walking:true, animTick:0})));
-      promises.push(bakeSprite(`enemy_${def.id}_walk2_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, walking:true, animTick:0.35})));
-      promises.push(bakeSprite(`enemy_${def.id}_attack_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, attackT:0.8})));
+      registerSprite(`enemy_${def.id}_idle_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing}));
+      registerSprite(`enemy_${def.id}_walk1_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, walking:true, animTick:0}));
+      registerSprite(`enemy_${def.id}_walk2_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, walking:true, animTick:0.35}));
+      registerSprite(`enemy_${def.id}_attack_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, attackT:0.8}));
     });
   });
 
   [...NPCS_VILLAGE, ...NPCS_FOREST, ...NPCS_SCENE2].forEach(n=>{
-    promises.push(bakeSprite(`npc_${n.id}`, (cx,cy)=>drawInkFigure(cx,cy,n.color,{facing:'down', accessory:n.accessory, prop:n.prop})));
+    registerSprite(`npc_${n.id}`, (cx,cy)=>drawInkFigure(cx,cy,n.color,{facing:'down', accessory:n.accessory, prop:n.prop}));
   });
 
-  return Promise.all(promises);
+  return loadSpriteSheet();
 }
 function drawSprite(key, x, y, tintAlpha){
-  const img = spriteCache[key];
-  if(!img || !img.complete || img.naturalWidth===0) return;
   const dx = x-SPRITE_ANCHOR_X, dy = y-SPRITE_ANCHOR_Y;
-  ctx.drawImage(img, dx, dy, SPRITE_SIZE, SPRITE_SIZE);
+  const idx = spriteKeyOrder.indexOf(key);
+  if(sheetLoaded && idx>=0){
+    const col = idx % SHEET_COLS, row = Math.floor(idx/SHEET_COLS);
+    ctx.drawImage(sheetImage, col*SPRITE_SIZE, row*SPRITE_SIZE, SPRITE_SIZE, SPRITE_SIZE, dx, dy, SPRITE_SIZE, SPRITE_SIZE);
+  } else {
+    const img = bakeFallback(key);
+    if(img) ctx.drawImage(img, dx, dy, SPRITE_SIZE, SPRITE_SIZE);
+  }
   if(tintAlpha>0){
     ctx.save();
     ctx.globalCompositeOperation='source-atop';
