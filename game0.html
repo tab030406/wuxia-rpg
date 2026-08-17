@@ -300,7 +300,7 @@ button:disabled{opacity:.4;cursor:not-allowed;}
 (function(){
 
 // ---------- Constants ----------
-const GAME_VERSION = 'v3.3.0';
+const GAME_VERSION = 'v4.1.0';
 const FIG_SCALE = 2; // character visual size multiplier
 const VIEW_W=672, VIEW_H=448; // fixed on-screen viewport (camera follows the player in the larger world)
 
@@ -954,7 +954,7 @@ function updateEnemyAI(en, dt){
       if(distToPlayer > en.kind.aggro*1.8){ en.state='return'; break; }
       if(distToPlayer <= en.kind.atkRange){ en.state='windup'; en.stateTimer=0.45; en.moving=false; break; }
       const dx=player.px-en.x, dy=player.py-en.y, len=Math.hypot(dx,dy)||1;
-      en.facing = dx<0 ? 'left' : 'right';
+      en.facing = Math.abs(dx)>Math.abs(dy) ? (dx<0?'left':'right') : (dy<0?'up':'down');
       const nx = Math.max(20, Math.min(WORLD_W-20, en.x + dx/len*en.kind.speed*dt));
       const ny = Math.max(20, Math.min(WORLD_H-20, en.y + dy/len*en.kind.speed*dt));
       if(!nearNPCZone(nx,ny) && !obstacleBlocked(nx,ny,18)){ en.x=nx; en.y=ny; en.moving=true; } else { en.moving=false; }
@@ -994,7 +994,7 @@ function updateEnemyAI(en, dt){
       const dx=en.spawnX-en.x, dy=en.spawnY-en.y, len=Math.hypot(dx,dy);
       if(len<4){ en.state='idle'; en.stateTimer=1; en.moving=false; break; }
       if(distToPlayer < en.kind.aggro*0.8){ en.state='chase'; break; }
-      en.facing = dx<0 ? 'left' : 'right';
+      en.facing = Math.abs(dx)>Math.abs(dy) ? (dx<0?'left':'right') : (dy<0?'up':'down');
       const nx = Math.max(20, Math.min(WORLD_W-20, en.x + dx/len*en.kind.speed*dt));
       const ny = Math.max(20, Math.min(WORLD_H-20, en.y + dy/len*en.kind.speed*dt));
       if(!nearNPCZone(nx,ny) && !obstacleBlocked(nx,ny,18)){ en.x=nx; en.y=ny; en.moving=true; } else { en.moving=false; }
@@ -1322,7 +1322,9 @@ function drawWolfFigure(cx, cy, color, opts){
   ctx.translate(cx,cy+4);
   ctx.fillStyle='rgba(0,0,0,.3)';
   ctx.beginPath(); ctx.ellipse(0,9*s,13*s,3*s,0,0,Math.PI*2); ctx.fill();
-  ctx.scale(flip,1);
+  if(facing==='up'){ ctx.rotate(-Math.PI/2); }
+  else if(facing==='down'){ ctx.rotate(Math.PI/2); }
+  else { ctx.scale(flip,1); }
   ctx.lineJoin='round';
   ctx.strokeStyle='#1c1712'; ctx.lineWidth=2*s/4;
   const lp = walking ? Math.sin(phase*11)*3.4*s : 0;
@@ -1380,7 +1382,9 @@ function drawPythonFigure(cx, cy, color, opts){
   ctx.translate(cx,cy+8);
   ctx.fillStyle='rgba(0,0,0,.3)';
   ctx.beginPath(); ctx.ellipse(0,7*s,16*s,3*s,0,0,Math.PI*2); ctx.fill();
-  ctx.scale(flip,1);
+  if(facing==='up'){ ctx.rotate(-Math.PI/2); }
+  else if(facing==='down'){ ctx.rotate(Math.PI/2); }
+  else { ctx.scale(flip,1); }
   ctx.lineJoin='round';
   ctx.strokeStyle='#1c1712'; ctx.lineWidth=1.8*s/4;
   const wave = Math.sin(phase*4)*2.2*s;
@@ -1686,87 +1690,147 @@ function lighten(hex, amt){
   return `rgb(${r},${g},${b})`;
 }
 
-// ---------- Sprite loading: reads ONE combined sprite-sheet image hosted alongside this
-// page ("spritesheet.png" next to index.html) and slices out each pose with drawImage's
-// source-rect form — this is the actual image-based rendering pipeline. The key order below
-// must exactly match the order the sheet was generated in (8 columns, row-major). If the
-// sheet fails to load, poses are generated on the fly from the original vector drawing as a
-// safety-net fallback so the game still runs.
-const SPRITESHEET_URL = 'spritesheet.png';
+// ============================================================================
+// SPRITE SYSTEM — image-based character rendering
+// ============================================================================
+// Each character "pose" (a specific direction + walk-frame or attack-frame) is
+// its OWN separate image file, named to match the pose exactly, e.g.:
+//   sprites/player_walk_down_1.png        (player, walking, facing down, frame 1 of 4)
+//   sprites/enemy_wolf_attack_left_3.png  (wolf, attacking, facing left, frame 3 of 4)
+// All files live in a "sprites/" folder placed next to this HTML file. The
+// game reads (loads) each PNG once at startup and then just draws that image
+// every frame — it does NOT recompute the drawing each frame like the vector
+// (path/arc/rect) version of this game used to.
+//
+// If a specific file is missing/renamed/not-yet-uploaded, that ONE pose is
+// generated on the fly from the original vector-drawing code as a safety-net
+// fallback, so a missing file never breaks the whole game — you'll just see
+// the old-style drawn pose for that one file until the real image is in place.
+// ============================================================================
+
+// Folder (relative to this HTML file) where the individual sprite PNGs live.
+const SPRITE_FOLDER = 'sprites/';
+
+// Every sprite is drawn on screen at this pixel size (width & height), and
+// SPRITE_ANCHOR_X/Y say WHERE INSIDE that square the character's "feet /
+// world position" sits. Example: SPRITE_ANCHOR_Y=150 out of a 220px-tall
+// image means the character's game-world (x,y) point maps to 150px down
+// from the top of the picture — everything below that is legroom, and
+// everything above is head / attack-swing clearance.
 const SPRITE_SIZE = 220, SPRITE_ANCHOR_X = 110, SPRITE_ANCHOR_Y = 150;
-const SHEET_COLS = 8;
-let SHEET_CELL_W = SPRITE_SIZE, SHEET_CELL_H = SPRITE_SIZE;
+
+// spriteCache: pose-name -> the loaded Image (or, if its file was missing, a
+// small canvas holding the generated fallback drawing). This is what
+// actually gets drawn on screen every frame.
 const spriteCache = {};
+// spriteDrawFns: pose-name -> the original vector-drawing function for that
+// pose. Kept ONLY so bakeFallback() can regenerate a pose on demand if its
+// image file can't be found — the live game never calls these directly.
 const spriteDrawFns = {};
-const spriteKeyOrder = [];
-let sheetImage = null, sheetLoaded = false;
-function registerSprite(key, drawFn){ spriteDrawFns[key] = drawFn; spriteKeyOrder.push(key); }
+function registerSprite(key, drawFn){ spriteDrawFns[key] = drawFn; }
+
+// Generates one pose from the vector-drawing code, used only when the
+// matching PNG file can't be loaded. It draws onto a small scratch canvas
+// by temporarily pointing the shared `ctx` variable at it — every
+// drawInkFigure()/drawWolfFigure()/drawPythonFigure() call draws onto
+// whatever `ctx` currently refers to — then restores `ctx` back to the
+// real on-screen canvas afterward.
 function bakeFallback(key){
-  if(spriteCache[key]) return spriteCache[key];
+  if(spriteCache[key]) return spriteCache[key]; // already generated once, just reuse it
   const bakeCanvas = document.createElement('canvas');
   bakeCanvas.width = SPRITE_SIZE; bakeCanvas.height = SPRITE_SIZE;
   const bakeCtx = bakeCanvas.getContext('2d');
-  const savedCtx = ctx;
-  ctx = bakeCtx;
-  try{ spriteDrawFns[key](SPRITE_ANCHOR_X, SPRITE_ANCHOR_Y); }catch(err){ console.error('fallback bake failed for', key, err); }
-  ctx = savedCtx;
+  const savedCtx = ctx;          // remember the real on-screen context
+  ctx = bakeCtx;                 // point all drawing functions at the scratch canvas instead
+  try{ spriteDrawFns[key](SPRITE_ANCHOR_X, SPRITE_ANCHOR_Y); }
+  catch(err){ console.error('fallback drawing failed for', key, err); }
+  ctx = savedCtx;                // put the real context back
   spriteCache[key] = bakeCanvas;
   return bakeCanvas;
 }
-function loadSpriteSheet(){
+
+// Loads ONE sprite PNG (sprites/<key>.png) and stores it in spriteCache.
+// Always resolves (never rejects) — on a load error it falls back to
+// bakeFallback() so Promise.all() in bakeAllSprites() never gets stuck
+// waiting on a single missing file.
+function loadSpriteFile(key){
   return new Promise(resolve=>{
     const img = new Image();
-    img.onload = ()=>{
-      sheetImage=img; sheetLoaded=true;
-      const rows = Math.ceil(spriteKeyOrder.length/SHEET_COLS);
-      SHEET_CELL_W = img.width / SHEET_COLS;
-      SHEET_CELL_H = img.height / rows;
+    img.onload = ()=>{ spriteCache[key]=img; resolve(); };
+    img.onerror = ()=>{
+      console.warn('missing sprite file, using generated fallback:', SPRITE_FOLDER+key+'.png');
+      bakeFallback(key);
       resolve();
     };
-    img.onerror = ()=>{ console.warn('sprite sheet not found, using generated fallback poses'); sheetLoaded=false; resolve(); };
-    img.src = SPRITESHEET_URL;
+    img.src = SPRITE_FOLDER + key + '.png';
   });
 }
+
+// How many walk/attack frames each direction gets, and which point in the
+// original animation timeline each frame is sampled from:
+//  - WALK_PHASES: 4 points spread across one stride cycle (fed in as the
+//    "animTick" input to drawInkFigure/drawWolfFigure/drawPythonFigure).
+//  - ATTACK_PHASES: 4 points spread across the attack swing (0 = just
+//    started, 1 = finished) — roughly wind-up / strike / follow-through / recovery.
+const WALK_PHASES = [0, 0.175, 0.349, 0.524];
+const ATTACK_PHASES = [0.15, 0.4, 0.65, 0.9];
+
+// Registers every pose the game needs (this just builds the list of poses +
+// their fallback drawing functions — it does NOT load any image files yet),
+// then kicks off loading every corresponding PNG file in parallel. Called
+// once at startup; the game waits for the returned Promise before letting
+// the player click "start".
 function bakeAllSprites(){
   const facings4 = ['down','up','left','right'];
-  const facings2 = ['left','right'];
 
+  // Player: 4 facing directions × (4 walk frames + 4 attack frames) = 32 poses
   facings4.forEach(facing=>{
-    registerSprite(`player_idle_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, accessory:'headband'}));
-    registerSprite(`player_walk1_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, walking:true, animTick:0, accessory:'headband'}));
-    registerSprite(`player_walk2_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, walking:true, animTick:0.35, accessory:'headband'}));
-    registerSprite(`player_attack_${facing}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, attackT:0.5, attackAnim:'punch', attackFx:'#f0e0c0', accessory:'headband'}));
-  });
-
-  ENEMY_DEFS.forEach(def=>{
-    const drawFn = def.bodyType==='wolf' ? drawWolfFigure : def.bodyType==='python' ? drawPythonFigure : drawInkFigure;
-    facings2.forEach(facing=>{
-      registerSprite(`enemy_${def.id}_idle_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing}));
-      registerSprite(`enemy_${def.id}_walk1_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, walking:true, animTick:0}));
-      registerSprite(`enemy_${def.id}_walk2_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, walking:true, animTick:0.35}));
-      registerSprite(`enemy_${def.id}_attack_${facing}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, attackT:0.8}));
+    WALK_PHASES.forEach((ph,i)=>{
+      registerSprite(`player_walk_${facing}_${i+1}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, walking:true, animTick:ph, accessory:'headband'}));
+    });
+    ATTACK_PHASES.forEach((at,i)=>{
+      registerSprite(`player_attack_${facing}_${i+1}`, (cx,cy)=>drawInkFigure(cx,cy,'#a3352c',{facing, attackT:at, attackAnim:'punch', attackFx:'#f0e0c0', accessory:'headband'}));
     });
   });
 
+  // Enemies: same 4-direction × (4 walk + 4 attack) pattern for every enemy
+  // type. Humanoid enemies (bandit, rogue) reuse drawInkFigure just like the
+  // player; the wolf and python use their own dedicated beast-drawing
+  // functions (which internally rotate their side-view art for up/down facing).
+  ENEMY_DEFS.forEach(def=>{
+    const drawFn = def.bodyType==='wolf' ? drawWolfFigure : def.bodyType==='python' ? drawPythonFigure : drawInkFigure;
+    facings4.forEach(facing=>{
+      WALK_PHASES.forEach((ph,i)=>{
+        registerSprite(`enemy_${def.id}_walk_${facing}_${i+1}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, walking:true, animTick:ph}));
+      });
+      ATTACK_PHASES.forEach((at,i)=>{
+        registerSprite(`enemy_${def.id}_attack_${facing}_${i+1}`, (cx,cy)=>drawFn(cx,cy,def.color,{facing, attackT:at}));
+      });
+    });
+  });
+
+  // NPCs never move or attack, so each one just needs a single standing pose.
   [...NPCS_VILLAGE, ...NPCS_FOREST, ...NPCS_SCENE2].forEach(n=>{
     registerSprite(`npc_${n.id}`, (cx,cy)=>drawInkFigure(cx,cy,n.color,{facing:'down', accessory:n.accessory, prop:n.prop}));
   });
 
-  return loadSpriteSheet();
+  // Now that every pose is registered, load all of their image files in
+  // parallel and wait for all of them (success or fallback) to finish.
+  return Promise.all(Object.keys(spriteDrawFns).map(loadSpriteFile));
 }
+
+// Draws one pose at world position (x,y). This is the ONLY function the rest
+// of the game calls to put a character on screen — it hides whether the
+// pose came from a real image file or a generated fallback.
+// tintAlpha (0-1, optional): overlays a translucent warm-white flash on top
+// of the sprite, used for the "about to attack" telegraph on enemies.
 function drawSprite(key, x, y, tintAlpha){
-  const dx = x-SPRITE_ANCHOR_X, dy = y-SPRITE_ANCHOR_Y;
-  const idx = spriteKeyOrder.indexOf(key);
-  if(sheetLoaded && idx>=0){
-    const col = idx % SHEET_COLS, row = Math.floor(idx/SHEET_COLS);
-    ctx.drawImage(sheetImage, col*SHEET_CELL_W, row*SHEET_CELL_H, SHEET_CELL_W, SHEET_CELL_H, dx, dy, SPRITE_SIZE, SPRITE_SIZE);
-  } else {
-    const img = bakeFallback(key);
-    if(img) ctx.drawImage(img, dx, dy, SPRITE_SIZE, SPRITE_SIZE);
-  }
+  const img = spriteCache[key] || bakeFallback(key); // use the loaded image, or generate one if still missing
+  const dx = x-SPRITE_ANCHOR_X, dy = y-SPRITE_ANCHOR_Y; // top-left corner so the anchor point lands exactly on (x,y)
+  if(img) ctx.drawImage(img, dx, dy, SPRITE_SIZE, SPRITE_SIZE);
   if(tintAlpha>0){
     ctx.save();
-    ctx.globalCompositeOperation='source-atop';
+    ctx.globalCompositeOperation='source-atop'; // only paints over the sprite's own non-transparent pixels
     ctx.globalAlpha=tintAlpha;
     ctx.fillStyle='#fff2c0';
     ctx.fillRect(dx,dy,SPRITE_SIZE,SPRITE_SIZE);
@@ -1856,13 +1920,24 @@ function render(){
   });
 
   enemies.forEach(en=>{
+    // 'windup' = the enemy is telegraphing an attack (see updateEnemyAI): chargeT goes
+    // 0 -> 1 over that wind-up, so we play through its 4 attack-frame images in order.
     const flash = en.state==='windup';
     const chargeT = en.state==='windup' ? Math.max(0, 1-(en.stateTimer/0.45)) : 0;
     const facing = en.facing||'right';
-    let eState = 'idle';
-    if(flash) eState='attack';
-    else if(en.moving) eState = (Math.floor((animTick+en.uid)*6)%2===0) ? 'walk1':'walk2';
-    drawSprite(`enemy_${en.kind.id}_${eState}_${facing}`, en.x, en.y, flash?chargeT*0.6:0);
+    let key; // which sprite-sheet key (= which PNG file) to draw this frame
+    if(flash){
+      const fi = Math.min(4, Math.floor(chargeT*4)+1); // 1..4, advances with the wind-up
+      key = `enemy_${en.kind.id}_attack_${facing}_${fi}`;
+    } else if(en.moving){
+      // Cycle through walk frames 1-2-3-4-1-2-3-4... at a fixed speed. `animTick+en.uid`
+      // offsets each enemy's cycle so they don't all step in perfect unison.
+      const fi = Math.floor((animTick+en.uid)*6)%4 + 1;
+      key = `enemy_${en.kind.id}_walk_${facing}_${fi}`;
+    } else {
+      key = `enemy_${en.kind.id}_walk_${facing}_1`; // standing still: reuse walk-frame 1 as "idle"
+    }
+    drawSprite(key, en.x, en.y, flash?chargeT*0.6:0);
     const bw=30, bh=5;
     ctx.fillStyle='rgba(0,0,0,.5)';
     ctx.fillRect(en.x-bw/2, en.y-FIGURE_TOP+9, bw, bh);
@@ -1884,14 +1959,24 @@ function render(){
 
   const now = performance.now();
   const invuln = now < invulnerableUntil;
-  const alpha = invuln ? (Math.floor(now/80)%2===0 ? 0.4:1) : 1;
+  const alpha = invuln ? (Math.floor(now/80)%2===0 ? 0.4:1) : 1; // blink while briefly invulnerable after taking a hit
+  // playerAttackT: 0->1 progress through the current basic-attack/skill swing
+  // (set in useBasicAttack/useHotbarSlot); 0 means "not currently attacking".
   const playerAttackT = (now - playerAttackAnim.start) < playerAttackAnim.duration ? (now-playerAttackAnim.start)/playerAttackAnim.duration : 0;
-  let pState = 'idle';
-  if(playerAttackT>0) pState='attack';
-  else if(player.walking) pState = (Math.floor(animTick*6)%2===0) ? 'walk1':'walk2';
+  const facingP = player.facing||'down';
+  let pKey; // which sprite-sheet key (= which PNG file) to draw this frame
+  if(playerAttackT>0){
+    const fi = Math.min(4, Math.floor(playerAttackT*4)+1); // 1..4, advances through the swing
+    pKey = `player_attack_${facingP}_${fi}`;
+  } else if(player.walking){
+    const fi = Math.floor(animTick*6)%4 + 1; // cycle 1-2-3-4-1-2-3-4... while moving
+    pKey = `player_walk_${facingP}_${fi}`;
+  } else {
+    pKey = `player_walk_${facingP}_1`; // standing still: reuse walk-frame 1 as "idle"
+  }
   ctx.save();
   ctx.globalAlpha = alpha;
-  drawSprite(`player_${pState}_${player.facing||'down'}`, player.px, player.py);
+  drawSprite(pKey, player.px, player.py);
   ctx.restore();
 
   const n = nearbyNPC();
